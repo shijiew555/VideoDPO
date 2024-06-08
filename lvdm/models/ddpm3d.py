@@ -728,7 +728,7 @@ class LatentDiffusion(DDPM):
             out.append(cond)
 
         return out
-
+ 
     def forward(self, x, c, **kwargs):
         if 't' in kwargs:
             t = kwargs.pop('t')
