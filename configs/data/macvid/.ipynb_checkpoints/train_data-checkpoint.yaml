@@ -1,0 +1,14 @@
+META:
+  # - /home/haoyu/research/VideoCrafter/dataset
+  # - /home/rliuay/haoyu/dataset/fake_dataset
+   - /home/rliuay/haoyu/dataset/VDP-10k/train
+  
+  
+
+# not ready metadata
+  # - /scratch/suptest/video_data/macvid/video_dataset_11
+  #  - /scratch/suptest/video_data/macvid/video_dataset_12/
+  #  - /scratch/suptest/video_data/macvid/video_dataset_13/
+  #  - /scratch/suptest/video_data/macvid/video_dataset_14/
+
+ 
