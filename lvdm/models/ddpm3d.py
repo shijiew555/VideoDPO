@@ -1106,7 +1106,7 @@ class LatentDiffusion(DDPM):
         # Remove reference model from checkpoint
         # since it won't be changed 
         # and keep consistent to original model 
-        # checkpoint contain statedict
+        # checkpoint contain statedict  
         print("==========saving checkpoint in ddpm3d=========")
         keys_to_remove = [key for key in checkpoint['state_dict'].keys() if "ref_model" in key]
         for key in keys_to_remove:
