@@ -4,6 +4,7 @@
 *.egg-info
 __pycache__
 
+.ipynb_checkpoints
 ckpts
 results
 checkpoints
