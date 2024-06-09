@@ -115,8 +115,8 @@ lightning:
     image_logger:
       target: utils.callbacks.ImageLogger
       params:
-        batch_frequency:  500
-        max_images: 6
+        batch_frequency:  1000
+        max_images: 2
         log_images_kwargs:
           unconditional_guidance_scale: 12 # need this, otherwise it is grey
     

@@ -6,6 +6,12 @@ EXPNAME="dpo-10k"                            # experiment name
 CONFIG='configs/train/video_dpo_ft/config.yaml' # experiment config 
 LOGDIR="./results/dpo-10k-fixdatapair"                         # experiment saving directory all should under subfolder so that won't be copied to codeversion
 
+
+# 等这么久之后，生成图片差不多完了
+echo "Script starts..."
+sleep 5h
+echo "5 hours later..."
+
 # run
 python scripts/train.py \
 -t --devices '4' \

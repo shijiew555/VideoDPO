@@ -31,8 +31,8 @@ def videocrafter2refmodel(videocrafter_path,ref_model_path):
 
 
 if __name__=="__main__":
-    path = "/home/rliuay/haoyu/research/LVDM-UST-VideoCrafterft-master/init_ckpt/VideoCrafter1-Image2Video-512/model.ckpt"
-    target_path = "/home/rliuay/haoyu/research/LVDM-UST-VideoCrafterft-master/init_ckpt/VideoCrafter1-Image2Video-512/ref_model.ckpt"
+    path = "/home/rliuay/haoyu/research/LVDM-UST-VideoCrafterft-master/init_ckpt/VideoCrafter1-Text2Video-512/model.ckpt"
+    target_path = "/home/rliuay/haoyu/research/LVDM-UST-VideoCrafterft-master/init_ckpt/VideoCrafter1-Text2Video-512/ref_model.ckpt"
     videocrafter2refmodel(path,target_path)
     ckpt = torch.load(target_path)['state_dict']
     # print(ckpt.keys())
