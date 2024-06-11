@@ -117,6 +117,7 @@ lightning:
       params:
         batch_frequency:  1000
         max_images: 2
+        to_local: True
         log_images_kwargs:
           unconditional_guidance_scale: 12 # need this, otherwise it is grey
     
