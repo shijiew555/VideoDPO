@@ -18,19 +18,23 @@ import torch.distributed as dist
 
 
 def gather_data(data, return_np=True):
-    ''' gather data from multiple processes to one list '''
+    """gather data from multiple processes to one list"""
     data_list = [torch.zeros_like(data) for _ in range(dist.get_world_size())]
     dist.all_gather(data_list, data)  # gather not supported with NCCL
     if return_np:
         data_list = [data.cpu().numpy() for data in data_list]
     return data_list
 
+
 def autocast(f):
     def do_autocast(*args, **kwargs):
-        with torch.cuda.amp.autocast(enabled=True,
-                                     dtype=torch.get_autocast_gpu_dtype(),
-                                     cache_enabled=torch.is_autocast_cache_enabled()):
+        with torch.cuda.amp.autocast(
+            enabled=True,
+            dtype=torch.get_autocast_gpu_dtype(),
+            cache_enabled=torch.is_autocast_cache_enabled(),
+        ):
             return f(*args, **kwargs)
+
     return do_autocast
 
 
@@ -41,7 +45,9 @@ def extract_into_tensor(a, t, x_shape):
 
 
 def noise_like(shape, device, repeat=False):
-    repeat_noise = lambda: torch.randn((1, *shape[1:]), device=device).repeat(shape[0], *((1,) * (len(shape) - 1)))
+    repeat_noise = lambda: torch.randn((1, *shape[1:]), device=device).repeat(
+        shape[0], *((1,) * (len(shape) - 1))
+    )
     noise = lambda: torch.randn(shape, device=device)
     return repeat_noise() if repeat else noise()
 
@@ -51,14 +57,18 @@ def default(val, d):
         return val
     return d() if isfunction(d) else d
 
+
 def exists(val):
     return val is not None
+
 
 def identity(*args, **kwargs):
     return nn.Identity()
 
+
 def uniq(arr):
-    return{el: True for el in arr}.keys()
+    return {el: True for el in arr}.keys()
+
 
 def mean_flat(tensor):
     """
@@ -66,22 +76,27 @@ def mean_flat(tensor):
     """
     return tensor.mean(dim=list(range(1, len(tensor.shape))))
 
+
 def ismap(x):
     if not isinstance(x, torch.Tensor):
         return False
     return (len(x.shape) == 4) and (x.shape[1] > 3)
 
+
 def isimage(x):
-    if not isinstance(x,torch.Tensor):
+    if not isinstance(x, torch.Tensor):
         return False
     return (len(x.shape) == 4) and (x.shape[1] == 3 or x.shape[1] == 1)
+
 
 def max_neg_value(t):
     return -torch.finfo(t.dtype).max
 
+
 def shape_to_str(x):
     shape_str = "x".join([str(x) for x in x.shape])
     return shape_str
+
 
 def init_(tensor):
     dim = tensor.shape[-1]
@@ -89,7 +104,10 @@ def init_(tensor):
     tensor.uniform_(-std, std)
     return tensor
 
+
 ckpt = torch.utils.checkpoint.checkpoint
+
+
 def checkpoint(func, inputs, params, flag):
     """
     Evaluate a function without caching intermediate activations, allowing for
@@ -111,6 +129,7 @@ def disabled_train(self, mode=True):
     does not change anymore."""
     return self
 
+
 def zero_module(module):
     """
     Zero out the parameters of a module and return it.
@@ -118,6 +137,7 @@ def zero_module(module):
     for p in module.parameters():
         p.detach().zero_()
     return module
+
 
 def scale_module(module, scale):
     """
@@ -161,10 +181,10 @@ def avg_pool_nd(dims, *args, **kwargs):
     raise ValueError(f"unsupported dimensions: {dims}")
 
 
-def nonlinearity(type='silu'):
-    if type == 'silu':
+def nonlinearity(type="silu"):
+    if type == "silu":
         return nn.SiLU()
-    elif type == 'leaky_relu':
+    elif type == "leaky_relu":
         return nn.LeakyReLU()
 
 
@@ -183,7 +203,6 @@ def normalization(channels, num_groups=32):
 
 
 class HybridConditioner(nn.Module):
-
     def __init__(self, c_concat_config, c_crossattn_config):
         super().__init__()
         self.concat_conditioner = instantiate_from_config(c_concat_config)
@@ -192,4 +211,4 @@ class HybridConditioner(nn.Module):
     def forward(self, c_concat, c_crossattn):
         c_concat = self.concat_conditioner(c_concat)
         c_crossattn = self.crossattn_conditioner(c_crossattn)
-        return {'c_concat': [c_concat], 'c_crossattn': [c_crossattn]}
+        return {"c_concat": [c_concat], "c_crossattn": [c_crossattn]}

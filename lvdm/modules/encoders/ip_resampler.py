@@ -6,19 +6,30 @@ import torch.nn as nn
 
 class ImageProjModel(nn.Module):
     """Projection Model"""
-    def __init__(self, cross_attention_dim=1024, clip_embeddings_dim=1024, clip_extra_context_tokens=4):
-        super().__init__()        
+
+    def __init__(
+        self,
+        cross_attention_dim=1024,
+        clip_embeddings_dim=1024,
+        clip_extra_context_tokens=4,
+    ):
+        super().__init__()
         self.cross_attention_dim = cross_attention_dim
         self.clip_extra_context_tokens = clip_extra_context_tokens
-        self.proj = nn.Linear(clip_embeddings_dim, self.clip_extra_context_tokens * cross_attention_dim)
+        self.proj = nn.Linear(
+            clip_embeddings_dim, self.clip_extra_context_tokens * cross_attention_dim
+        )
         self.norm = nn.LayerNorm(cross_attention_dim)
-        
+
     def forward(self, image_embeds):
-        #embeds = image_embeds
+        # embeds = image_embeds
         embeds = image_embeds.type(list(self.proj.parameters())[0].dtype)
-        clip_extra_context_tokens = self.proj(embeds).reshape(-1, self.clip_extra_context_tokens, self.cross_attention_dim)
+        clip_extra_context_tokens = self.proj(embeds).reshape(
+            -1, self.clip_extra_context_tokens, self.cross_attention_dim
+        )
         clip_extra_context_tokens = self.norm(clip_extra_context_tokens)
         return clip_extra_context_tokens
+
 
 # FFN
 def FeedForward(dim, mult=4):
@@ -29,11 +40,11 @@ def FeedForward(dim, mult=4):
         nn.GELU(),
         nn.Linear(inner_dim, dim, bias=False),
     )
-    
-    
+
+
 def reshape_tensor(x, heads):
     bs, length, width = x.shape
-    #(bs, length, width) --> (bs, length, n_heads, dim_per_head)
+    # (bs, length, width) --> (bs, length, n_heads, dim_per_head)
     x = x.view(bs, length, heads, -1)
     # (bs, length, n_heads, dim_per_head) --> (bs, n_heads, length, dim_per_head)
     x = x.transpose(1, 2)
@@ -57,7 +68,6 @@ class PerceiverAttention(nn.Module):
         self.to_kv = nn.Linear(dim, inner_dim * 2, bias=False)
         self.to_out = nn.Linear(inner_dim, dim, bias=False)
 
-
     def forward(self, x, latents):
         """
         Args:
@@ -68,23 +78,25 @@ class PerceiverAttention(nn.Module):
         """
         x = self.norm1(x)
         latents = self.norm2(latents)
-        
+
         b, l, _ = latents.shape
 
         q = self.to_q(latents)
         kv_input = torch.cat((x, latents), dim=-2)
         k, v = self.to_kv(kv_input).chunk(2, dim=-1)
-        
+
         q = reshape_tensor(q, self.heads)
         k = reshape_tensor(k, self.heads)
         v = reshape_tensor(v, self.heads)
 
         # attention
         scale = 1 / math.sqrt(math.sqrt(self.dim_head))
-        weight = (q * scale) @ (k * scale).transpose(-2, -1) # More stable with f16 than dividing afterwards
+        weight = (q * scale) @ (k * scale).transpose(
+            -2, -1
+        )  # More stable with f16 than dividing afterwards
         weight = torch.softmax(weight.float(), dim=-1).type(weight.dtype)
         out = weight @ v
-        
+
         out = out.permute(0, 2, 1, 3).reshape(b, l, -1)
 
         return self.to_out(out)
@@ -103,14 +115,14 @@ class Resampler(nn.Module):
         ff_mult=4,
     ):
         super().__init__()
-        
+
         self.latents = nn.Parameter(torch.randn(1, num_queries, dim) / dim**0.5)
-        
+
         self.proj_in = nn.Linear(embedding_dim, dim)
 
         self.proj_out = nn.Linear(dim, output_dim)
         self.norm_out = nn.LayerNorm(output_dim)
-        
+
         self.layers = nn.ModuleList([])
         for _ in range(depth):
             self.layers.append(
@@ -123,14 +135,13 @@ class Resampler(nn.Module):
             )
 
     def forward(self, x):
-        
         latents = self.latents.repeat(x.size(0), 1, 1)
-        
+
         x = self.proj_in(x)
-        
+
         for attn, ff in self.layers:
             latents = attn(x, latents) + latents
             latents = ff(latents) + latents
-            
+
         latents = self.proj_out(latents)
         return self.norm_out(latents)
