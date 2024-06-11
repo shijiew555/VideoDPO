@@ -91,7 +91,7 @@ model:
 data:
   target: data.lightning_data.DataModuleFromConfig
   params:
-    batch_size: 1
+    batch_size: 2
     num_workers: 16
     wrap: false
     train:
@@ -110,7 +110,8 @@ data:
         subset_split: all
 
 lightning:
-  # strategy: deepspeed
+  strategy: deepspeed
+  
   callbacks:
     image_logger:
       target: utils.callbacks.ImageLogger
@@ -118,6 +119,7 @@ lightning:
         batch_frequency:  1000
         max_images: 2
         to_local: True
+        save_dir: results/log_image
         log_images_kwargs:
           unconditional_guidance_scale: 12 # need this, otherwise it is grey
     
@@ -130,7 +132,8 @@ lightning:
         every_n_train_steps: 991
   trainer:
     benchmark: True
-    # batch_size: 12
+    precision: 16
+    # batch_size: 2
     num_workers: 10
     num_nodes: 1
     accumulate_grad_batches: 2

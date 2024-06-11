@@ -131,7 +131,7 @@ if __name__ == "__main__":
     trainer_kwargs["callbacks"] = [instantiate_from_config(callbacks_cfg[k]) for k in callbacks_cfg]
     strategy_cfg = get_trainer_strategy(lightning_config)
     trainer_kwargs["strategy"] = strategy_cfg if type(strategy_cfg) == str else instantiate_from_config(strategy_cfg)
-    trainer_kwargs['precision'] = lightning_config.get('precision', 32)
+    # trainer_kwargs['precision'] = lightning_config.get('precision', 16)
     trainer_kwargs["sync_batchnorm"] = False
 
     ## trainer config: others
@@ -149,6 +149,7 @@ if __name__ == "__main__":
     # print(trainer_args)
     # print(trainer_kwargs)
     # exit()
+    
     trainer = Trainer.from_argparse_args(trainer_args, **trainer_kwargs)
 
     ## allow checkpointing via USR1
@@ -177,6 +178,8 @@ if __name__ == "__main__":
                 ## deepspeed
                 with torch.cuda.amp.autocast():
                     trainer.fit(model, data)
+                # print(trainer.precision);exit()
+                # trainer.fit(model, data)
             else:
                 logger.info("<Training in DDPShare Mode>")
                 ## ddpshare

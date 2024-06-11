@@ -48,7 +48,6 @@ def get_trainer_callbacks(lightning_config, config, logdir, ckptdir, logger):
                 "filename": "{epoch}",
                 "verbose": True,
                 "save_last": True,
-                "use_reentrant": True,
             }
         },
         "batch_logger": {
