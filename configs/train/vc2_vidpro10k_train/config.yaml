@@ -3,12 +3,12 @@ model:
   scale_lr: False
   # empty_params_only: True # disable this means finetuning all parameters
   # sd_checkpoint: /home/rliuay/haoyu/research/LVDM-UST-VideoCrafterft-master/init_ckpt/StableDiffusion/v2-1_512-ema-pruned.ckpt
-  ref_model_checkpoint: /home/rliuay/runtao/haoyu_data/init_ckpt/VideoCrafter1-Text2Video-512/ref_model.ckpt
-  pretrained_checkpoint: /home/rliuay/runtao/haoyu_data/init_ckpt/VideoCrafter1-Text2Video-512/model.ckpt
+  ref_model_checkpoint: /home/rliuay/runtao/haoyu_data/init_ckpt/VideoCrafter2-Text2Video-512/ref_model.ckpt
+  pretrained_checkpoint: /home/rliuay/runtao/haoyu_data/init_ckpt/VideoCrafter2-Text2Video-512/model.ckpt
   target: lvdm.models.ddpm3d.LatentDiffusion
   params:
     loss_type: dpo
-    log_every_t: 999
+    log_every_t: 200
     linear_start: 0.00085
     linear_end: 0.012
     num_timesteps_cond: 1
@@ -26,14 +26,13 @@ model:
     use_ema: false
     uncond_type: empty_seq
     monitor: val/loss_simple_ema
-    # encoder_type: 2d
-    # use_scale: true # t2v v1 don't contain this param
-    # scale_b: 0.7 # adapt to videocrafter-v2
-    beta_dpo: 5000. # adapt to diffusion dpo 
+    encoder_type: 2d
+    use_scale: true
+    scale_b: 0.7 # adapt to videocrafter-v2
+
     unet_config:
       target: lvdm.modules.networks.openaimodel3d.UNetModel
       params:
-        # freeze: False
         in_channels: 4
         out_channels: 4
         model_channels: 320
@@ -52,14 +51,14 @@ model:
         context_dim: 1024
         use_linear: true
         use_checkpoint: true
-        temporal_conv: false 
+        temporal_conv: true # adapt to videocrafter-v2
         temporal_attention: true
         temporal_selfatt_only: true
-        use_relative_position: true
+        use_relative_position: false # adapt to videocrafter-v2
         use_causal_attention: false
         temporal_length: 16
         addition_attention: true
-        # fps_cond: true # adapt to videocrafter-v2
+        fps_cond: true # adapt to videocrafter-v2
     first_stage_config:
       target: lvdm.models.autoencoder.AutoencoderKL
       params:
@@ -85,8 +84,9 @@ model:
     cond_stage_config:
       target: lvdm.modules.encoders.condition.FrozenOpenCLIPEmbedder
       params:
-        # freeze: true
+        freeze: true
         layer: penultimate
+        
 data:
   target: data.lightning_data.DataModuleFromConfig
   params:
@@ -96,14 +96,14 @@ data:
     train:
       target: data.macvid.MaCVidDPO
       params:
-        data_root: configs/data/macvid/train_data.yaml
+        data_root: configs/data/vidpro/train_data.yaml
         resolution: [320, 512]
         video_length: 16
         subset_split: all
     validation:
       target: data.macvid.MaCVidDPO
       params:
-        data_root: configs/data/macvid/val_data.yaml
+        data_root: configs/data/vidpro/val_data.yaml
         resolution: [320, 512]
         video_length: 16
         subset_split: all

@@ -460,6 +460,7 @@ class DDPM(pl.LightningModule):
 
     def shared_step(self, batch):
         x = self.get_input(batch, self.first_stage_key)
+        print("shared step:",x.shape)
         loss, loss_dict = self(x)
         return loss, loss_dict
 
@@ -798,10 +799,13 @@ class LatentDiffusion(DDPM):
 
     @torch.no_grad()
     def encode_first_stage(self, x):
+        # print("in encode first stage ",x.shape)
         if self.encoder_type == "2d" and x.dim() == 5:
             return self.encode_first_stage_2DAE(x)
         encoder_posterior = self.first_stage_model.encode(x)
+        print("    pencoder post",encoder_posterior.shape)
         results = self.get_first_stage_encoding(encoder_posterior).detach()
+        print("    result",results.shape)
         return results
 
     def encode_first_stage_2DAE(self, x):
@@ -859,11 +863,14 @@ class LatentDiffusion(DDPM):
         data_key = "jpg" if is_imgbatch else self.first_stage_key
         x = super().get_input(batch, data_key)
         if self.loss_type == "dpo":
+            # print("in get batch input prechunk ",x.shape)
             x = torch.cat(x.chunk(2, dim=1))  # feed pixel values
+            # print("after chunk",x.shape)
         # print(x.shape);exit()
         if is_imgbatch:
             ## pack image as video
             # x = x[:,:,None,:,:]
+            # print("================in image_batch======================")
             b = x.shape[0] // self.temporal_length
             x = rearrange(x, "(b t) c h w -> b c t h w", b=b, t=self.temporal_length)
         x_ori = x

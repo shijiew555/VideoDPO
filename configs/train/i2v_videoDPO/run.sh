@@ -22,11 +22,12 @@ LOGDIR="./results/dpo-10k-image2video"   # experiment saving directory all shoul
 # --auto_resume True
 
 
+export CUDA_VISIBLE_DEVICES=1,2,3
 python -m torch.distributed.run \
 --nnodes=1 \
---nproc_per_node=4 \
+--nproc_per_node=3 \
 scripts/train.py \
--t --devices '4' \
+-t --devices '3' \
 lightning.trainer.num_nodes=1 \
 --base $CONFIG \
 --name "$current_time"_$EXPNAME \

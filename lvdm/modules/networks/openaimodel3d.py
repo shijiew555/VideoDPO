@@ -339,7 +339,7 @@ class UNetModel(nn.Module):
 
     def __init__(
         self,
-        freeze,
+        # freeze,
         in_channels,
         model_channels,
         out_channels,
@@ -647,8 +647,8 @@ class UNetModel(nn.Module):
             zero_module(conv_nd(dims, model_channels, out_channels, 3, padding=1)),
         )
 
-        if freeze:
-            self.freeze()
+        # if freeze:
+        #     self.freeze()
 
     def freeze(self):
         # self = self.eval()

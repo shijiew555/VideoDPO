@@ -1,0 +1,15 @@
+META:
+  # - /home/haoyu/research/VideoCrafter/dataset
+  # - /home/rliuay/haoyu/dataset/fake_dataset
+   - /home/rliuay/haoyu/dataset/text2video2-10k/train/dataset_0
+   - /home/rliuay/haoyu/dataset/text2video2-10k/train/dataset_1
+  
+  
+
+# not ready metadata
+  # - /scratch/suptest/video_data/macvid/video_dataset_11
+  #  - /scratch/suptest/video_data/macvid/video_dataset_12/
+  #  - /scratch/suptest/video_data/macvid/video_dataset_13/
+  #  - /scratch/suptest/video_data/macvid/video_dataset_14/
+
+ 

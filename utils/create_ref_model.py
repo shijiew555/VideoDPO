@@ -3,6 +3,8 @@ haoyu
 20240602
 create a ref_model from ckpt
 now support I2V model
+20240621
+now support T2V model v2 
 """
 
 import torch
@@ -32,8 +34,8 @@ def videocrafter2refmodel(videocrafter_path, ref_model_path):
 
 
 if __name__ == "__main__":
-    path = "/home/rliuay/haoyu/research/LVDM-UST-VideoCrafterft-master/init_ckpt/VideoCrafter1-Text2Video-512/model.ckpt"
-    target_path = "/home/rliuay/haoyu/research/LVDM-UST-VideoCrafterft-master/init_ckpt/VideoCrafter1-Text2Video-512/ref_model.ckpt"
+    path = "/home/rliuay/runtao/haoyu_data/init_ckpt/VideoCrafter2-Text2Video-512/model.ckpt"
+    target_path = "/home/rliuay/runtao/haoyu_data/init_ckpt/VideoCrafter2-Text2Video-512/ref_model.ckpt"
     videocrafter2refmodel(path, target_path)
     ckpt = torch.load(target_path)["state_dict"]
     # print(ckpt.keys())
