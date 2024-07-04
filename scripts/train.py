@@ -92,6 +92,8 @@ if __name__ == "__main__":
         num_rank = int(os.environ.get("WORLD_SIZE"))
     except:
         local_rank, global_rank, num_rank = 0, 0, 1
+    num_gpus = torch.cuda.device_count()
+    print(f"可用 GPU 的总数量: {num_gpus}")
     print(f"local_rank: {local_rank} | global_rank:{global_rank} | num_rank:{num_rank}")
     os.environ.pop("SLURM_NTASKS", None)
     parser = get_parser()

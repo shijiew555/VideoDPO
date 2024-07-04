@@ -882,7 +882,9 @@ class LatentDiffusion(DDPM):
         cond = batch[cond_key]
         # why notice: this is classifier-free guidance implementation
         if random_uncond and self.uncond_type == "empty_seq":
+            # print(type(cond),cond)
             for i, ci in enumerate(cond):
+                # print(len(cond))
                 if random.random() < self.uncond_prob:
                     cond[i] = ""
         if isinstance(cond, dict) or isinstance(cond, list):

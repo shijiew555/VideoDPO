@@ -10,3 +10,4 @@ results
 checkpoints
 srun_output
 debug
+log_image

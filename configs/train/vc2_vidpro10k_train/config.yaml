@@ -114,11 +114,13 @@ lightning:
     image_logger:
       target: utils.callbacks.ImageLogger
       params:
+        to_local: True
+        save_dir: log_image
         batch_frequency:  1000
         max_images: 2
         log_images_kwargs:
           unconditional_guidance_scale: 12 # need this, otherwise it is grey
-    
+        
     metrics_over_trainsteps_checkpoint:
       target: pytorch_lightning.callbacks.ModelCheckpoint
       params:

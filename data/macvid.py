@@ -183,6 +183,7 @@ class MaCVidDPO(Dataset):
         videowidx, videolidx, frame_caption = self.pairs[index]
         videow = self.data[videowidx]["video"]
         videol = self.data[videolidx]["video"]
+        # print(f"video idx {videowidx} {videolidx}")
         # print("in dataloader getitem",videow.shape,videol.shape)
         if videow.dim()==5:
             combined_frames = torch.cat([videow, videol], dim=0)
