@@ -2,12 +2,23 @@ META:
   # - /home/haoyu/research/VideoCrafter/dataset
   # - /home/rliuay/haoyu/dataset/fake_dataset
    # - /home/rliuay/haoyu/dataset/text2video2-10k/train/dataset_0
-   # - /home/rliuay/haoyu/dataset/text2video2-10k/train/dataset_1
-  - /home/rliuay/haoyu/dataset/VDP-10k/train
-  - /home/rliuay/haoyu/dataset/text2video2-10k/rewrite_train/
-  # - /home/rliuay/haoyu/dataset/text2video2-10k/random_train/
+   # - /home/rliuay/haoyu/dataset/text2video2-10k/train/dataset_1 ##llava-llama 
+  # - /home/rliuay/haoyu/dataset/VDP-10k/train  # image 2 video data on picapic 
+  # - /home/rliuay/haoyu/dataset/text2video2-10k/rewrite_train/ # llava llama -rewrite 
+  # - /home/rliuay/haoyu/dataset/text2video2-10k/dynamic_vbscore/ # preference by vbench score  
+  # - /home/rliuay/haoyu/dataset/text2video2-10k/aesthetic_quality_vbscore  # preference by aesthetic_quality_vbscore
+  # - /home/rliuay/haoyu/dataset/text2video2-10k/overall_consistency_vbscore 
+  # - /home/rliuay/haoyu/dataset/text2video2-10k/subject_consistency_vbscore 
+  # - /home/rliuay/haoyu/dataset/text2video2-10k/total_score_vbscore 
+  # - /home/rliuay/haoyu/dataset/text2video2-10k/total_score_25P_vbscore 
+  # - /home/rliuay/haoyu/dataset/text2video2-10k/total_score_0P_vbscore 
+  # - /home/rliuay/haoyu/dataset/text2video2-10k/total_score_75P_vbscore 
+  # - /home/rliuay/haoyu/dataset/text2video2-10k/aesthetic_quality_vbscore 
   # - /home/rliuay/haoyu/dataset/text2video2-10k/random_prompt_train/
-  
+  # - /home/rliuay/haoyu/dataset/text2video2-10k/color_train/ # color replace 
+  # - /home/rliuay/haoyu/dataset/text2video2-10k/total_score_500
+  # - /home/rliuay/haoyu/dataset/text2video2-10k/pair_policy/total_score_0P_pair01_vbscore
+  - /home/rliuay/haoyu/dataset/text2video2-10k/pair_policy/total_score_0P_pair02_vbscore
 
 # not ready metadata
   # - /scratch/suptest/video_data/macvid/video_dataset_11

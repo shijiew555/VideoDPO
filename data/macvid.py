@@ -164,7 +164,7 @@ class MaCVidDPO(Dataset):
             with open(pairdata_path, "r") as f:
                 pairs = json.load(f)
                 for item in pairs:
-                    # under the pair.json after0601,label_key has no use
+                    # under the pair.json after 0601,label_key has no use
                     self.pairs.append(
                         [item["video1"], item["video2"], item["frame_caption"]]
                     )

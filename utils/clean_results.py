@@ -18,6 +18,7 @@ def clean_dir(dirname):
                 and len(os.listdir(trainstep_checkpoints_path)) == 0
             ):
                 # Remove the root directory
+                print(root)
                 shutil.rmtree(root)
             else:
                 # Print the root directory path
@@ -32,7 +33,7 @@ def clean_dir(dirname):
 
 def main():
     parser = argparse.ArgumentParser(description="List contents of a directory.")
-    parser.add_argument("--dirname", type=str, help="The name of the directory")
+    parser.add_argument('-d',"--dirname", type=str, help="The name of the directory")
 
     args = parser.parse_args()
 

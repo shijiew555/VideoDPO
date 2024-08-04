@@ -36,6 +36,16 @@ def init_workspace(name, logdir, model_config, lightning_config, rank=0):
             OmegaConf.create({"lightning": lightning_config}),
             os.path.join(cfgdir, "lightning.yaml"),
         )
+        # 2024 0728 haoyu
+        # save data.yaml to the work sapace
+        src_path = model_config['data']['params']['train']['params']['data_root'] ## xx. configs/data/vidpro/train_data.yaml
+        root_dir = "/home/rliuay/haoyu/research/DPO-videocrafter"
+        config_path = os.path.join(root_dir,src_path)
+        save_path = os.path.join(cfgdir,"train_data.yaml")
+        os.system(f"cp {config_path} {save_path}");
+        # print("test saving train data .yaml exiting");exit();
+        # save_path = os.path.join(cfgdir,"valid_data.yaml")
+    # exit()
     return workdir, ckptdir, cfgdir, loginfo
 
 
