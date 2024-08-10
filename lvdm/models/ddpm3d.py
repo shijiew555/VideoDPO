@@ -138,6 +138,8 @@ class DDPM(pl.LightningModule):
             # if with torch no grad ？ still need require grad =False ?
 
             self.ref_model = DiffusionWrapper(unet_config, conditioning_key)
+
+            
             # freeze all
             for param in self.ref_model.diffusion_model.parameters():
                 param.requires_grad = False
@@ -564,7 +566,6 @@ class DDPM(pl.LightningModule):
 
 class LatentDiffusion(DDPM):
     """main class"""
-
     def __init__(
         self,
         first_stage_config,
@@ -665,7 +666,19 @@ class LatentDiffusion(DDPM):
             self.restarted_from_ckpt = True
 
         self.logdir = logdir
-
+    def load_state_dict(self, state_dict, strict=False):
+        mainlogger.info(
+            f"""
+            *********************************************
+            customed ckpt resume loading function.
+            the saved checkpoint poped ref_model for inference time loading and save space. 
+            we have to merge it here,when resuming it. 
+            *********************************************
+            """
+        )
+        # state_dict = {k: v for k, v in state_dict.items() if "ref_model" not in k}
+        super().load_state_dict(state_dict, strict)
+        
     def make_cond_schedule(
         self,
     ):
