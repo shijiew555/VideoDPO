@@ -1,0 +1,3 @@
+bash configs/train/driver/run.sh total_score_0P_pair13_vbscore /home/rliuay/haoyu/research/DPO-videocrafter/configs/train/driver/train_configs/total_score_0P_pair13_vbscore/config.yaml ./results/dpo-vc2-10th
+
+bash configs/train/driver/run.sh total_score_0P_pair23_vbscore /home/rliuay/haoyu/research/DPO-videocrafter/configs/train/driver/train_configs/total_score_0P_pair23_vbscore/config.yaml ./results/dpo-vc2-10th

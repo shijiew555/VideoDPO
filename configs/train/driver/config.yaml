@@ -96,7 +96,7 @@ data:
     train:
       target: data.macvid.MaCVidDPO
       params:
-        data_root: configs/data/vidpro/train_data.yaml
+        data_root: /path/to/created_yaml/
         resolution: [320, 512]
         video_length: 16
         subset_split: all
@@ -134,7 +134,7 @@ lightning:
     num_workers: 10
     num_nodes: 1
     accumulate_grad_batches: 2
-    max_epochs: 10 # for first step training max_epoch = 3 
+    max_epochs: 3 # for first step training max_epoch = 3 
   modelcheckpoint:
     target: pytorch_lightning.callbacks.ModelCheckpoint
     params:
