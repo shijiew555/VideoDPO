@@ -124,12 +124,15 @@ if __name__ == "__main__":
     logger.info("***** Configing Model *****")
     config.model.params.logdir = workdir
     model = instantiate_from_config(config.model)
+
     if args.auto_resume:
         ## the saved checkpoint must be: full-info checkpoint
         resume_ckpt_path = get_autoresume_path(workdir)
         if resume_ckpt_path is not None:
             args.resume_from_checkpoint = resume_ckpt_path
             logger.info("Resuming from checkpoint: %s" % args.resume_from_checkpoint)
+            ### 0809 fix:load ref_model before auto_resume 
+            model = load_checkpoints(model, config.model)
             ## just in case train empy parameters only
             if check_config_attribute(config.model.params, "empty_params_only"):
                 _, model.empty_paras = get_empty_params_comparedwith_sd(

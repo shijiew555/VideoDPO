@@ -18,7 +18,6 @@ def init_workspace(name, logdir, model_config, lightning_config, rank=0):
     ckptdir = os.path.join(workdir, "checkpoints")
     cfgdir = os.path.join(workdir, "configs")
     loginfo = os.path.join(workdir, "loginfo")
-
     # Create logdirs and save configs (all ranks will do to avoid missing directory error if rank:0 is slower)
     os.makedirs(workdir, exist_ok=True)
     os.makedirs(ckptdir, exist_ok=True)
@@ -345,7 +344,6 @@ def get_autoresume_path(logdir):
         mainlogger.info(
             f"[INFO] no checkpoint found in current workspace: {os.path.join(logdir, 'checkpoints')}"
         )
-
     return resume_checkpt_path
 
 
