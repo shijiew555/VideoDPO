@@ -121,7 +121,7 @@ if __name__ == "__main__":
     logger.info("@lightning version: %s [>=1.8 required]" % (pl.__version__))
 
     ## MODEL CONFIG >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    logger.info("***** Configing Model *****")
+    logger.info("***** Configuring Model *****")
     config.model.params.logdir = workdir
     model = instantiate_from_config(config.model)
 
@@ -144,6 +144,9 @@ if __name__ == "__main__":
     else:
         model = load_checkpoints(model, config.model)
 
+    # inject lora
+    if len(model.lora_args)!=0:
+        model.inject_lora()
     ## update trainer config
     for k in get_nondefault_trainer_args(args):
         trainer_config[k] = getattr(args, k)

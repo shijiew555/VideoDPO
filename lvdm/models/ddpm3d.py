@@ -25,6 +25,7 @@ from torch.nn import functional as F
 from pytorch_lightning.utilities import rank_zero_only
 from torch.optim.lr_scheduler import CosineAnnealingLR, LambdaLR
 from torchvision.utils import make_grid
+from lvdm.modules.lora import inject_trainable_lora,tune_lora_scale,load_lora_state_dict
 
 from lvdm.modules.utils import (
     disabled_train,
@@ -387,6 +388,14 @@ class DDPM(pl.LightningModule):
         scale_term = -0.5 * self.beta_dpo
         inside_term = scale_term * (model_diff - ref_diff)
         implicit_acc = (inside_term > 0).sum().float() / inside_term.size(0)
+        # log implicit acc for 
+        self.log(
+            "implicit_acc",implicit_acc,
+            prog_bar=True,
+            logger=True,
+            on_step=True,
+            on_epoch=False,
+        )
         loss = -1 * F.logsigmoid(inside_term).mean()
         return loss
 
@@ -664,8 +673,40 @@ class LatentDiffusion(DDPM):
         if ckpt_path is not None:
             self.init_from_ckpt(ckpt_path, ignore_keys, only_model=only_model)
             self.restarted_from_ckpt = True
-
+        lora_args = kwargs.pop("lora_args", [])
+                
         self.logdir = logdir
+        # lora related args
+        self.inject_unet = getattr(lora_args, "inject_unet", False)
+        self.inject_clip = getattr(lora_args, "inject_clip", False)
+        self.inject_unet_key_word = getattr(lora_args, "inject_unet_key_word", None)
+        self.inject_clip_key_word = getattr(lora_args, "inject_clip_key_word", None)
+        self.lora_rank = getattr(lora_args, "lora_rank", 4)
+        self.lora_args = lora_args
+        self.lora_scale =getattr(lora_args, "lora_scale", 4)
+        self.save_lora = False
+        if len(lora_args) != 0:
+            # import pdb; pdb.set_trace()
+            # self.inject_lora(lora_scale=self.lora_scale)
+            if hasattr(self, 'ref_model'):
+                # Unload the reference model to free up memory
+                mainlogger.info("----removing ref_model when use lora")
+                del self.ref_model
+            self.save_lora = True
+            pass
+    def shared_ref_pred(self,x_noisy, t, cond, kwargs):
+        if hasattr(self, 'ref_model'):
+            import pdb; pdb.set_trace();
+            ref_pred =  self.ref_model(x_noisy, t, **cond, **kwargs).detach() 
+        else:
+            with torch.no_grad():
+                ## set lora scale to 0 to ban lora layer
+                tune_lora_scale(model=self.model,alpha=0)
+                ref_pred = self.model(x_noisy, t, **cond, **kwargs).detach() 
+                ## reset lora scale to origin value
+                tune_lora_scale(model=self.model,alpha=self.lora_scale)
+        return ref_pred
+    
     def load_state_dict(self, state_dict, strict=False):
         mainlogger.info(
             f"""
@@ -678,6 +719,29 @@ class LatentDiffusion(DDPM):
         )
         # state_dict = {k: v for k, v in state_dict.items() if "ref_model" not in k}
         super().load_state_dict(state_dict, strict)
+    def _freeze_model(self):
+        for name, para in self.model.diffusion_model.named_parameters():
+            para.requires_grad = False
+    def load_lora_from_ckpt(self,path):
+        load_lora_state_dict(self.model,path)
+    def inject_lora(self):
+        lora_scale=self.lora_scale
+        self._freeze_model()
+        if self.inject_unet:
+            self.lora_require_grad_params, self.lora_names = inject_trainable_lora(self.model, self.inject_unet_key_word, 
+                                                                                   r=self.lora_rank,
+                                                                                   scale=lora_scale,
+                                                                                   verbose=True)# set to True for debug 
+                                                                                   # module_child_name=inject_unet_child_name,
+                                                                           # )
+            print(f'inject unet: {self.lora_names}')
+        if self.inject_clip:
+            self.lora_require_grad_params_clip, self.lora_names_clip = inject_trainable_lora(self.cond_stage_model, self.inject_clip_key_word, 
+                                                                                             r=self.lora_rank,
+                                                                                             scale=lora_scale,
+                                                                                             verbose=True,
+                                                                                             )
+            print(f'inject clip: {self.lora_names_clip}')
         
     def make_cond_schedule(
         self,
@@ -714,9 +778,7 @@ class LatentDiffusion(DDPM):
                 * noise
             )
 
-    def _freeze_model(self):
-        for name, para in self.model.diffusion_model.named_parameters():
-            para.requires_grad = False
+
 
     @rank_zero_only
     @torch.no_grad()
@@ -964,7 +1026,7 @@ class LatentDiffusion(DDPM):
 
         x_recon = self.model(x_noisy, t, **cond, **kwargs)
         if self.loss_type == "dpo":
-            self.ref_pred = self.ref_model(x_noisy, t, **cond, **kwargs)
+            self.ref_pred = self.shared_ref_pred(x_noisy, t, cond, kwargs)
         if isinstance(x_recon, tuple):
             return x_recon[0]
         else:
@@ -1365,6 +1427,24 @@ class LatentDiffusion(DDPM):
         return samples, intermediates
 
     def configure_optimizers(self):
+        # """ configure_optimizers for LatentDiffusion """
+        lr = self.learning_rate
+        params = [p for p in self.model.parameters() if p.requires_grad]
+        if self.learn_logvar:
+            print('Diffusion model optimizing logvar')
+            if isinstance(params[0], dict):
+                params.append({"params": [self.logvar]})
+            else:
+                params.append(self.logvar)
+    
+        opt = torch.optim.AdamW(params, lr=lr)
+        if self.use_scheduler:
+            print("Setting up LR scheduler...")
+            lr_scheduler = self.configure_schedulers(opt)
+            return [opt], [lr_scheduler]
+        return opt
+
+    def configure_optimizers(self):
         """configure_optimizers for LatentDiffusion"""
         lr = self.learning_rate
         if self.empty_params_only and hasattr(self, "empty_paras"):
@@ -1436,6 +1516,13 @@ class LatentDiffusion(DDPM):
         ]
         for key in keys_to_remove:
             checkpoint["state_dict"].pop(key, None)
+        if self.save_lora:
+            print("==========saving lora weights only =========")
+            keys_to_remove = [
+                key for key in checkpoint["state_dict"].keys() if "lora" not in key
+            ]
+            for key in keys_to_remove:
+                checkpoint["state_dict"].pop(key, None)
 
 
 class LatentVisualDiffusion(LatentDiffusion):
