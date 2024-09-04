@@ -1,18 +1,17 @@
 model:
   base_learning_rate: 6.0e-06 # 1.5e-04
   scale_lr: False
-  ref_model_checkpoint: /home/liurt/liurt_data/haoyu/DPO-videocrafter/init_ckpt/vc2/ref_model.ckpt
   pretrained_checkpoint: /home/liurt/liurt_data/haoyu/DPO-videocrafter/init_ckpt/vc2/model.ckpt
-  target: lvdm.models.ddpm3d.LatentDiffusion
+  target: lvdm.models.ddpm3d.RewardLVDMTrainer
   params:
     lora_args:
-      lora_implementation: orig
+      lora_implementation: orig # orig / peft . orig means inject a lora.py  
       inject_unet: True
       inject_clip: False
       inject_unet_key_word: ["TimestepEmbedSequential", "SpatialTemporalTransformer", "MemoryEfficientCrossAttention", "CrossAttention", "Attention", "GEGLU"]
       lora_rank: 4
-    loss_type: dpo
-    log_every_t: 200
+    loss_type: aesthetic
+    log_every_t: 2
     linear_start: 0.00085
     linear_end: 0.012
     num_timesteps_cond: 1
@@ -53,7 +52,7 @@ model:
         transformer_depth: 1
         context_dim: 1024
         use_linear: true
-        use_checkpoint: true
+        use_checkpoint: false
         temporal_conv: true # adapt to videocrafter-v2
         temporal_attention: true
         temporal_selfatt_only: true
@@ -97,11 +96,11 @@ data:
     num_workers: 16
     wrap: false
     train:
-      target: data.macvid.MaCVidDPO
+      target: data.macvid.MaCVid
       params:
-        data_root: /home/liurt/liurt_data/haoyu/DPO-videocrafter/configs/data/vidpro/train_data.yaml
+        data_root: /home/liurt/liurt_data/haoyu/dataset/elon_musk_video/train_data.yaml
         resolution: [320, 512]
-        video_length: 16
+        video_length: 4  # set to 4 for faster training RLHF  
         subset_split: all
     # validation:
     #   target: data.macvid.MaCVid
@@ -125,21 +124,21 @@ lightning:
           unconditional_guidance_scale: 12 # need this, otherwise it is grey
         
     metrics_over_trainsteps_checkpoint:
-      target: utils.callbacks.LoraModelCheckpoint
+      target: pytorch_lightning.callbacks.ModelCheckpoint
       params:
         filename: "step-{step:04}"
         save_weights_only: True
         every_n_epochs: null
-        every_n_train_steps: 9
+        every_n_train_steps: 499
   trainer:
     benchmark: True
     # batch_size: 6
     num_workers: 10
     num_nodes: 1
     accumulate_grad_batches: 1
-    max_epochs: 50 # for first step training max_epoch = 3 
+    max_epochs: 10 # for first step training max_epoch = 3 
   modelcheckpoint:
-    target: utils.callbacks.LoraModelCheckpoint
+    target: pytorch_lightning.callbacks.ModelCheckpoint
     params:
       every_n_epochs: 1
       filename: "{epoch:04}-{step:06}"

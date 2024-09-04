@@ -4,9 +4,9 @@ current_time=$(date +%Y%m%d%H%M%S)
 #current_time=20240722100141
 
 # EXPNAME="tt_score_500_lr6e-6"                            # experiment name 
-EXPNAME="total_score_75P"
-CONFIG='configs/train/vc2_lora/config.yaml' # experiment config 
-LOGDIR="./results/dpo-vc2-11th"                         # experiment saving directory all should under subfolder so that won't be copied to codeversion
+EXPNAME="lora_aes_overfit"
+CONFIG='configs/train/rlhf/config.yaml' # experiment config 
+LOGDIR="./results/reward-vc2-1th"                         # experiment saving directory all should under subfolder so that won't be copied to codeversion
 
 # echo "Script starts..."
 # sleep 5h

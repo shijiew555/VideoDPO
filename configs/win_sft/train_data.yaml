@@ -1,6 +1,7 @@
 META:
   ## 5880 server path 
-  - /home/liurt/liurt_data/haoyu/dataset/text2video2-10k/total_score_75P_vbscore
+  # - /home/liurt/liurt_data/haoyu/dataset/text2video2-10k/total_score_75P_vbscore
+  - /home/liurt/liurt_data/haoyu/dataset/text2video2-10k/total_score_75P_vbscore/win_sft
   ## superPOD server path 
 #   - /home/haoyu/research/VideoCrafter/dataset
   # - /home/rliuay/haoyu/dataset/fake_dataset

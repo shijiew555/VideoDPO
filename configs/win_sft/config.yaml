@@ -6,12 +6,12 @@ model:
   target: lvdm.models.ddpm3d.LatentDiffusion
   params:
     lora_args:
-      lora_implementation: orig
+      lora_implementation: peft
       inject_unet: True
       inject_clip: False
       inject_unet_key_word: ["TimestepEmbedSequential", "SpatialTemporalTransformer", "MemoryEfficientCrossAttention", "CrossAttention", "Attention", "GEGLU"]
       lora_rank: 4
-    loss_type: dpo
+    loss_type: l1
     log_every_t: 200
     linear_start: 0.00085
     linear_end: 0.012
@@ -97,11 +97,11 @@ data:
     num_workers: 16
     wrap: false
     train:
-      target: data.macvid.MaCVidDPO
+      target: data.macvid.MaCVid
       params:
-        data_root: /home/liurt/liurt_data/haoyu/DPO-videocrafter/configs/data/vidpro/train_data.yaml
+        data_root: /home/liurt/liurt_data/haoyu/DPO-videocrafter/configs/win_sft/train_data.yaml
         resolution: [320, 512]
-        video_length: 16
+        video_length: 2
         subset_split: all
     # validation:
     #   target: data.macvid.MaCVid
@@ -137,7 +137,7 @@ lightning:
     num_workers: 10
     num_nodes: 1
     accumulate_grad_batches: 1
-    max_epochs: 50 # for first step training max_epoch = 3 
+    max_epochs: 4  # for first step training max_epoch = 3 
   modelcheckpoint:
     target: utils.callbacks.LoraModelCheckpoint
     params:

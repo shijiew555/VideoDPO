@@ -1,6 +1,11 @@
 model:
   target: lvdm.models.ddpm3d.LatentDiffusion
   params:
+    lora_args:
+      inject_unet: True
+      inject_clip: False
+      inject_unet_key_word: ["TimestepEmbedSequential", "SpatialTemporalTransformer", "MemoryEfficientCrossAttention", "CrossAttention", "Attention", "GEGLU"]
+      lora_rank: 4
     linear_start: 0.00085
     linear_end: 0.012
     num_timesteps_cond: 1
@@ -22,7 +27,7 @@ model:
     unet_config:
       target: lvdm.modules.networks.openaimodel3d.UNetModel
       params:
-        freeze: False
+        #freeze: False
         in_channels: 4
         out_channels: 4
         model_channels: 320
