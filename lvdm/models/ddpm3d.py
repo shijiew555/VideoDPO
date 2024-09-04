@@ -25,7 +25,7 @@ from torch.nn import functional as F
 from pytorch_lightning.utilities import rank_zero_only
 from torch.optim.lr_scheduler import CosineAnnealingLR, LambdaLR
 from torchvision.utils import make_grid
-from lvdm.modules.lora import inject_trainable_lora,tune_lora_scale,load_lora_state_dict
+from lvdm.modules.lora import inject_trainable_lora,tune_lora_scale,load_lora_state_dict,collapse_lora,monkeypatch_remove_lora
 
 from lvdm.modules.utils import (
     disabled_train,
@@ -42,6 +42,8 @@ from utils.common_utils import instantiate_from_config
 
 __conditioning_keys__ = {"concat": "c_concat", "crossattn": "c_crossattn", "adm": "y"}
 
+import peft
+            
 
 class DDPM(pl.LightningModule):
     # classic DDPM with Gaussian diffusion, in image space
@@ -501,6 +503,7 @@ class DDPM(pl.LightningModule):
 
     @torch.no_grad()
     def validation_step(self, batch, batch_idx):
+        import pdb; pdb.set_trace()
         _, loss_dict_no_ema = self.shared_step(batch, random_uncond=False)
         with self.ema_scope():
             _, loss_dict_ema = self.shared_step(batch, random_uncond=False)
@@ -609,6 +612,7 @@ class LatentDiffusion(DDPM):
         ckpt_path = kwargs.pop("ckpt_path", None)
         ignore_keys = kwargs.pop("ignore_keys", [])
         conditioning_key = default(conditioning_key, "crossattn")
+        lora_args = kwargs.pop("lora_args", []) # lora args should be poped bofere super.init
         super().__init__(conditioning_key=conditioning_key, *args, **kwargs)
 
         self.cond_stage_trainable = cond_stage_trainable
@@ -673,10 +677,10 @@ class LatentDiffusion(DDPM):
         if ckpt_path is not None:
             self.init_from_ckpt(ckpt_path, ignore_keys, only_model=only_model)
             self.restarted_from_ckpt = True
-        lora_args = kwargs.pop("lora_args", [])
                 
         self.logdir = logdir
         # lora related args
+        self.lora_implementation = getattr(lora_args, "lora_implementation", "peft") # default as peft 
         self.inject_unet = getattr(lora_args, "inject_unet", False)
         self.inject_clip = getattr(lora_args, "inject_clip", False)
         self.inject_unet_key_word = getattr(lora_args, "inject_unet_key_word", None)
@@ -686,8 +690,6 @@ class LatentDiffusion(DDPM):
         self.lora_scale =getattr(lora_args, "lora_scale", 4)
         self.save_lora = False
         if len(lora_args) != 0:
-            # import pdb; pdb.set_trace()
-            # self.inject_lora(lora_scale=self.lora_scale)
             if hasattr(self, 'ref_model'):
                 # Unload the reference model to free up memory
                 mainlogger.info("----removing ref_model when use lora")
@@ -706,42 +708,56 @@ class LatentDiffusion(DDPM):
                 ## reset lora scale to origin value
                 tune_lora_scale(model=self.model,alpha=self.lora_scale)
         return ref_pred
-    
-    def load_state_dict(self, state_dict, strict=False):
-        mainlogger.info(
-            f"""
-            *********************************************
-            customed ckpt resume loading function.
-            the saved checkpoint poped ref_model for inference time loading and save space. 
-            we have to merge it here,when resuming it. 
-            *********************************************
-            """
-        )
-        # state_dict = {k: v for k, v in state_dict.items() if "ref_model" not in k}
-        super().load_state_dict(state_dict, strict)
     def _freeze_model(self):
         for name, para in self.model.diffusion_model.named_parameters():
             para.requires_grad = False
+            
     def load_lora_from_ckpt(self,path):
+        # if self.lora_implementation == "peft":
+        #     self.model = peft.get_peft_model(self.model, self.lora_default_config)
+        #     peft.set_peft_model_state_dict(self.model, torch.load(path))
+        #     # print(torch.load(path)['state_dict'].keys());exit();
+        # else:
         load_lora_state_dict(self.model,path)
+    def merge_lora(self):
+        # if not called, the result is correct 
+        # if called, the results seems wrong 
+        collapse_lora(self.model)
+        monkeypatch_remove_lora(self.model)
     def inject_lora(self):
         lora_scale=self.lora_scale
-        self._freeze_model()
-        if self.inject_unet:
-            self.lora_require_grad_params, self.lora_names = inject_trainable_lora(self.model, self.inject_unet_key_word, 
-                                                                                   r=self.lora_rank,
-                                                                                   scale=lora_scale,
-                                                                                   verbose=True)# set to True for debug 
-                                                                                   # module_child_name=inject_unet_child_name,
-                                                                           # )
-            print(f'inject unet: {self.lora_names}')
-        if self.inject_clip:
-            self.lora_require_grad_params_clip, self.lora_names_clip = inject_trainable_lora(self.cond_stage_model, self.inject_clip_key_word, 
-                                                                                             r=self.lora_rank,
-                                                                                             scale=lora_scale,
-                                                                                             verbose=True,
-                                                                                             )
-            print(f'inject clip: {self.lora_names_clip}')
+        lora_implementation =  self.lora_implementation #"peft" # peft / else 
+        print(f"=======Inject Lora Use {lora_implementation} ==============")
+        if self.lora_implementation == "peft":
+            self.lora_default_config = peft.LoraConfig(
+                r=self.lora_rank,
+                target_modules=["to_k", "to_v", "to_q","proj"],        # only diffusion_model has these modules
+                lora_dropout=0.0,
+            )
+            self.model = peft.get_peft_model(self.model, self.lora_default_config)
+            self.model.print_trainable_parameters()
+            # self.cond_stage_model = peft.get_peft_model(self.c
+            # ond_stage_model, lora_default_config)
+            # self.cond_stage_model.print_trainable_parameters()
+        else:
+            self._freeze_model()
+            if self.inject_unet:
+                self.lora_require_grad_params, self.lora_names = \
+                    inject_trainable_lora(self.model, self.inject_unet_key_word, 
+                                            r=self.lora_rank,
+                                            scale=lora_scale,
+                                            verbose=True)# set to True for debug 
+                                            # module_child_name=inject_unet_child_name
+                                            # )
+                print(f'inject unet: {self.lora_names}')
+            if self.inject_clip:
+                self.lora_require_grad_params_clip, self.lora_names_clip = \
+                    inject_trainable_lora(self.cond_stage_model, self.inject_clip_key_word, 
+                                            r=self.lora_rank,
+                                            scale=lora_scale,
+                                            verbose=True,
+                                            )
+                print(f'inject clip: {self.lora_names_clip}')
         
     def make_cond_schedule(
         self,
@@ -897,33 +913,38 @@ class LatentDiffusion(DDPM):
         )
         return results
 
-    def decode_first_stage_2DAE(self, z, **kwargs):
-        """decode frame by frame"""
-        _, _, t, _, _ = z.shape
-        results = torch.cat(
-            [
-                self.first_stage_model.decode(z[:, :, i], **kwargs).unsqueeze(2)
-                for i in range(t)
-            ],
-            dim=2,
-        )
-        return results
 
-    def _decode_core(self, z, **kwargs):
-        z = 1.0 / self.scale_factor * z
+    # @torch.no_grad()
+    # def decode_first_stage_2DAE(self, z, **kwargs):
 
+    #     b, _, t, _, _ = z.shape
+    #     z = 1. / self.scale_factor * z
+    #     results = torch.cat([self.first_stage_model.decode(z[:,:,i], **kwargs).unsqueeze(2) for i in range(t)], dim=2)
+    #     return results
+    
+    def decode_core(self, z, **kwargs):
         if self.encoder_type == "2d" and z.dim() == 5:
-            return self.decode_first_stage_2DAE(z)
+            b, _, t, _, _ = z.shape
+            z = rearrange(z, 'b c t h w -> (b t) c h w')
+            reshape_back = True
+        else:
+            reshape_back = False
+            
+        z = 1. / self.scale_factor * z
+
         results = self.first_stage_model.decode(z, **kwargs)
+            
+        if reshape_back:
+            results = rearrange(results, '(b t) c h w -> b c t h w', b=b,t=t)
         return results
 
     @torch.no_grad()
     def decode_first_stage(self, z, **kwargs):
-        return self._decode_core(z, **kwargs)
+        return self.decode_core(z, **kwargs)
 
     def differentiable_decode_first_stage(self, z, **kwargs):
         """same as decode_first_stage but without decorator"""
-        return self._decode_core(z, **kwargs)
+        return self.decode_core(z, **kwargs)
 
     @torch.no_grad()
     def get_batch_input(
@@ -1505,24 +1526,119 @@ class LatentDiffusion(DDPM):
             raise NotImplementedError
         return lr_scheduler
 
-    def on_save_checkpoint(self, checkpoint):
-        # Remove reference model from checkpoint
-        # since it won't be changed
-        # and keep consistent to original model
-        # checkpoint contain statedict
-        print("==========saving checkpoint in ddpm3d=========")
-        keys_to_remove = [
-            key for key in checkpoint["state_dict"].keys() if "ref_model" in key
-        ]
-        for key in keys_to_remove:
-            checkpoint["state_dict"].pop(key, None)
-        if self.save_lora:
-            print("==========saving lora weights only =========")
-            keys_to_remove = [
-                key for key in checkpoint["state_dict"].keys() if "lora" not in key
-            ]
-            for key in keys_to_remove:
-                checkpoint["state_dict"].pop(key, None)
+    # def on_save_checkpoint(self, checkpoint):
+    #     # Remove reference model from checkpoint
+    #     # since it won't be changed
+    #     # and keep consistent to original model
+    #     # checkpoint contain statedict
+    #     print("==========saving checkpoint in ddpm3d=========")
+    #     keys_to_remove = [
+    #         key for key in checkpoint["state_dict"].keys() if "ref_model" in key
+    #     ]
+    #     for key in keys_to_remove:
+    #         checkpoint["state_dict"].pop(key, None)
+    #     return checkpoint
+
+# import rlhf utils 
+from lvdm.models.rlhf_utils.batch_ddim import batch_ddim_sampling
+from lvdm.models.rlhf_utils.reward_fn import aesthetic_loss_fn
+
+class RewardLVDMTrainer(LatentDiffusion):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Reward Gradient Training Using LoRA as a default
+        # TODO: use config and getattr to set default values
+        # sampling configs for DDIM
+        self.ddim_eta = 1.0 
+        self.ddim_steps = 20 # reduce some steps to speed up sampling process 
+        self.n_samples = 1
+        self.fps = 24 # default 24 following VADER 
+        # rlhf configs  
+        self.backprop_mode = "last" #m"backpropagation mode: 'last', 'rand', 'specific'"
+        self.decode_frame = -1  # it could also be any number str like '3', '10'. alt: alternate frames, fml: first, middle, last frames, all: all frames. '-1': random frame
+        self.reward_loss_type = "aesthetic" 
+        # self.configure_reward_loss()    
+        
+    def configure_reward_loss(self,loss_type=None):
+        if loss_type is None:
+            loss_type = self.reward_loss_type
+            
+        if loss_type == "aesthetic":
+            self.loss_fn = aesthetic_loss_fn(grad_scale=0.1,
+                                        aesthetic_target=10,
+                                        torch_dtype = self.model.dtype,
+                                        device = self.device)
+        else:
+            raise NotImplementedError(f"loss type {loss_type} not implemented")
+        
+    def on_train_batch_start(self, batch, batch_idx, dataloader_idx=None):
+        # the reason why configure here is to wait the model transfered to target device
+        # otherwise, the loss_fn will be on cpu if configure in __init__
+        self.configure_reward_loss()
+    def training_step(self, batch, batch_idx):
+        """training_step for Reward Model Feedback"""
+        # 构造输入,与denoise训练不一样的地方是这里不需要VAE encode ，只需要nosie shape 
+        # 默认的cond是text prompt
+        prompts = batch[self.cond_stage_key]
+        # print(prompts) #  Elon mask is talking
+        x, c = self.get_batch_input(
+            batch, random_uncond=self.classifier_free_guidance, is_imgbatch=False
+        ) # x is latent image ; c is text embedding(tensor)
+        kwargs ={}
+        batch_size = x.shape[0]
+        noise_shape = (batch_size, self.channels, self.temporal_length//4, *self.image_size)# (1, 4, 4, 40, 64)
+        # print("noise shape",noise_shape)
+        fps = torch.tensor([self.fps]*batch_size).to(self.device).long()
+        cond = {"c_crossattn": [c], "fps": fps}
+        # 注意这个batch_ddim_sampling是VADER自己改过的版本 
+        # 输入的cond 是 cond = {"c_crossattn": [text_emb], "fps": fps}
+        batch_samples = batch_ddim_sampling(self, cond, noise_shape, self.n_samples, \
+                                            self.ddim_steps, self.ddim_eta, self.classifier_free_guidance,\
+                                            None, backprop_mode=self.backprop_mode, decode_frame=self.decode_frame,\
+                                            **kwargs)
+
+        video_frames_ = batch_samples.permute(1,0,3,2,4,5)      # batch,samples,channels,frames,height,width >> s,b,f,c,h,w
+        # print("video_frames shape",batch_samples.shape,video_frames_.requires_grad)
+        s_, bs, nf, c_, h_, w_ = video_frames_.shape
+        assert s_ == 1                                  # samples should only be on single sample in training mode
+        video_frames_ = video_frames_.squeeze(0)        # s,b,f,c,h,w >> b,f,c,h,w
+        assert nf == 1                                  # reward should only be on single frame
+        video_frames_ = video_frames_.squeeze(1)        # b,f,c,h,w >> b,c,h,w
+        video_frames_ = video_frames_.to(x.dtype)
+
+        # some reward fn may require prompts as input. 
+        loss, rewards = self.loss_fn(video_frames_)  # rewards is for logging only. 
+        loss_dict = {"reward_train_loss": loss.detach().item(), "step_reward": rewards.detach().item()}
+        self.log_dict(
+            loss_dict,
+            prog_bar=True,
+            logger=True,
+            on_step=True,
+            on_epoch=True,
+            sync_dist=False,
+        )
+        self.log(
+            "global_step",
+            self.global_step,
+            prog_bar=True,
+            logger=True,
+            on_step=True,
+            on_epoch=False,
+        )
+        if (batch_idx + 1) % self.log_every_t == 0:
+            mainlogger.info(
+                f"batch:{batch_idx}|epoch:{self.current_epoch} [globalstep:{self.global_step}]: loss={loss} reward={rewards}"
+            )
+        return loss
+
+    def configure_optimizers(self):
+        lr = self.learning_rate
+        opt = torch.optim.AdamW(self.model.parameters(), lr=lr)
+        # the training steps count is short no need for scheduler as default 
+        if self.use_scheduler:
+            lr_scheduler = self.configure_schedulers(opt)
+            return [opt], [lr_scheduler]
+        return opt
 
 
 class LatentVisualDiffusion(LatentDiffusion):
@@ -1596,7 +1712,7 @@ class DiffusionWrapper(pl.LightningModule):
         mask=None,
         **kwargs,
     ):
-        # temporal_context = fps is foNone
+        # temporal_context = fps is None
         if self.conditioning_key is None:
             out = self.diffusion_model(x, t)
         elif self.conditioning_key == "concat":
