@@ -1,6 +1,8 @@
 META:
+  ## autodl server path 
+  -  /root/autodl-tmp/total_score_0P_vbscore
   ## 5880 server path 
-  - /home/liurt/liurt_data/haoyu/dataset/text2video2-10k/total_score_75P_vbscore
+  # - /home/liurt/liurt_data/haoyu/dataset/text2video2-10k/total_score_75P_vbscore
   ## superPOD server path 
 #   - /home/haoyu/research/VideoCrafter/dataset
   # - /home/rliuay/haoyu/dataset/fake_dataset

@@ -1,12 +1,10 @@
 export TOKENIZERS_PARALLELISM=false
 # export OMP_NUM_THREADS=4
 current_time=$(date +%Y%m%d%H%M%S)
-current_time=20240722100141
 
-# EXPNAME="tt_score_500_lr6e-6"                            # experiment name 
-EXPNAME="tt_score_25P_vc2onvidpro"
+EXPNAME="timestep_strategy1"
 CONFIG='configs/train/vc2_vidpro10k_train/config.yaml' # experiment config 
-LOGDIR="./results/dpo-vc2-9th"                         # experiment saving directory all should under subfolder so that won't be copied to codeversion
+LOGDIR="./results/dpo-vc2-12th"                         # experiment saving directory all should under subfolder so that won't be copied to codeversion
 
 
 # 等这么久之后，生成图片差不多完了

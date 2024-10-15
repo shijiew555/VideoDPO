@@ -3,12 +3,12 @@ model:
   scale_lr: False
   # empty_params_only: True # disable this means finetuning all parameters
   # sd_checkpoint: /home/rliuay/haoyu/research/LVDM-UST-VideoCrafterft-master/init_ckpt/StableDiffusion/v2-1_512-ema-pruned.ckpt
-  ref_model_checkpoint: /home/rliuay/runtao/haoyu_data/init_ckpt/VideoCrafter2-Text2Video-512/ref_model.ckpt
-  pretrained_checkpoint: /home/rliuay/runtao/haoyu_data/init_ckpt/VideoCrafter2-Text2Video-512/model.ckpt
+  ref_model_checkpoint: /root/autodl-tmp/init_ckpt/vc2/ref_model.ckpt
+  pretrained_checkpoint: /root/autodl-tmp/init_ckpt/vc2/model.ckpt
   target: lvdm.models.ddpm3d.LatentDiffusion
   params:
     loss_type: dpo
-    log_every_t: 200
+    log_every_t: 2
     linear_start: 0.00085
     linear_end: 0.012
     num_timesteps_cond: 1
@@ -100,13 +100,13 @@ data:
         resolution: [320, 512]
         video_length: 16
         subset_split: all
-    validation:
-      target: data.macvid.MaCVidDPO
-      params:
-        data_root: configs/data/vidpro/val_data.yaml
-        resolution: [320, 512]
-        video_length: 16
-        subset_split: all
+    # validation:
+    #   target: data.macvid.MaCVidDPO
+    #   params:
+    #     data_root: configs/data/vidpro/val_data.yaml
+    #     resolution: [320, 512]
+    #     video_length: 16
+    #     subset_split: all
 
 lightning:
   # strategy: deepspeed
@@ -127,7 +127,7 @@ lightning:
         filename: "step-{step:04}"
         save_weights_only: True
         every_n_epochs: null
-        every_n_train_steps: 991
+        every_n_train_steps: 499
   trainer:
     benchmark: True
     # batch_size: 6

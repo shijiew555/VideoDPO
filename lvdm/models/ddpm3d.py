@@ -503,7 +503,7 @@ class DDPM(pl.LightningModule):
 
     @torch.no_grad()
     def validation_step(self, batch, batch_idx):
-        import pdb; pdb.set_trace()
+        # import pdb; pdb.set_trace()
         _, loss_dict_no_ema = self.shared_step(batch, random_uncond=False)
         with self.ema_scope():
             _, loss_dict_ema = self.shared_step(batch, random_uncond=False)
@@ -698,7 +698,7 @@ class LatentDiffusion(DDPM):
             pass
     def shared_ref_pred(self,x_noisy, t, cond, kwargs):
         if hasattr(self, 'ref_model'):
-            import pdb; pdb.set_trace();
+            # import pdb; pdb.set_trace();
             ref_pred =  self.ref_model(x_noisy, t, **cond, **kwargs).detach() 
         else:
             with torch.no_grad():
@@ -1013,6 +1013,19 @@ class LatentDiffusion(DDPM):
             t = torch.randint(
                 0, self.num_timesteps, (x.shape[0],), device=self.device
             ).long()
+            t = t//2 # [0,500]
+            t += self.num_timesteps//2 #[500,1000]
+            # mean = 0      # 均值设为0
+            # std = 1000    # 标准差设为1000
+            # 从高斯分布中采样，并将负数取绝对值，再取整
+            # t = torch.normal(mean, std, (x.shape[0],)).abs().long().to(self.device)
+        self.log(
+            "train/timestep",int(t.max().cpu().detach().clone()),
+            prog_bar=False,
+            logger=True,
+            on_step=True,
+            on_epoch=False,
+        )
         return self.p_losses(x, c, t, **kwargs)
 
     def shared_step(self, batch, random_uncond, **kwargs):
@@ -1465,38 +1478,38 @@ class LatentDiffusion(DDPM):
             return [opt], [lr_scheduler]
         return opt
 
-    def configure_optimizers(self):
-        """configure_optimizers for LatentDiffusion"""
-        lr = self.learning_rate
-        if self.empty_params_only and hasattr(self, "empty_paras"):
-            params = [
-                p for n, p in self.model.named_parameters() if n in self.empty_paras
-            ]
-            print("self.empty_paras", len(self.empty_paras))
-            for n, p in self.model.named_parameters():
-                if n not in self.empty_paras:
-                    p.requires_grad = False
-            mainlogger.info(f"@Training [{len(params)}] Empty Paramters ONLY.")
-        else:
-            params = list(self.model.parameters())
-            mainlogger.info(f"@Training [{len(params)}] Full Paramters.")
+    # def configure_optimizers(self):
+    #     """configure_optimizers for LatentDiffusion"""
+    #     lr = self.learning_rate
+    #     if self.empty_params_only and hasattr(self, "empty_paras"):
+    #         params = [
+    #             p for n, p in self.model.named_parameters() if n in self.empty_paras
+    #         ]
+    #         print("self.empty_paras", len(self.empty_paras))
+    #         for n, p in self.model.named_parameters():
+    #             if n not in self.empty_paras:
+    #                 p.requires_grad = False
+    #         mainlogger.info(f"@Training [{len(params)}] Empty Paramters ONLY.")
+    #     else:
+    #         params = list(self.model.parameters())
+    #         mainlogger.info(f"@Training [{len(params)}] Full Paramters.")
 
-        if self.learn_logvar:
-            mainlogger.info("Diffusion model optimizing logvar")
-            if isinstance(params[0], dict):
-                params.append({"params": [self.logvar]})
-            else:
-                params.append(self.logvar)
+    #     if self.learn_logvar:
+    #         mainlogger.info("Diffusion model optimizing logvar")
+    #         if isinstance(params[0], dict):
+    #             params.append({"params": [self.logvar]})
+    #         else:
+    #             params.append(self.logvar)
 
-        ## optimizer
-        optimizer = torch.optim.AdamW(params, lr=lr)
-        ## lr scheduler
-        if self.use_scheduler:
-            mainlogger.info("Setting up LambdaLR scheduler...")
-            lr_scheduler = self.configure_schedulers(optimizer)
-            return [optimizer], [lr_scheduler]
+    #     ## optimizer
+    #     optimizer = torch.optim.AdamW(params, lr=lr)
+    #     ## lr scheduler
+    #     if self.use_scheduler:
+    #         mainlogger.info("Setting up LambdaLR scheduler...")
+    #         lr_scheduler = self.configure_schedulers(optimizer)
+    #         return [optimizer], [lr_scheduler]
 
-        return optimizer
+    #     return optimizer
 
     def configure_schedulers(self, optimizer):
         assert "target" in self.scheduler_config
@@ -1539,106 +1552,106 @@ class LatentDiffusion(DDPM):
     #         checkpoint["state_dict"].pop(key, None)
     #     return checkpoint
 
-# import rlhf utils 
-from lvdm.models.rlhf_utils.batch_ddim import batch_ddim_sampling
-from lvdm.models.rlhf_utils.reward_fn import aesthetic_loss_fn
+# # import rlhf utils 
+# from lvdm.models.rlhf_utils.batch_ddim import batch_ddim_sampling
+# from lvdm.models.rlhf_utils.reward_fn import aesthetic_loss_fn
 
-class RewardLVDMTrainer(LatentDiffusion):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Reward Gradient Training Using LoRA as a default
-        # TODO: use config and getattr to set default values
-        # sampling configs for DDIM
-        self.ddim_eta = 1.0 
-        self.ddim_steps = 20 # reduce some steps to speed up sampling process 
-        self.n_samples = 1
-        self.fps = 24 # default 24 following VADER 
-        # rlhf configs  
-        self.backprop_mode = "last" #m"backpropagation mode: 'last', 'rand', 'specific'"
-        self.decode_frame = -1  # it could also be any number str like '3', '10'. alt: alternate frames, fml: first, middle, last frames, all: all frames. '-1': random frame
-        self.reward_loss_type = "aesthetic" 
-        # self.configure_reward_loss()    
+# class RewardLVDMTrainer(LatentDiffusion):
+#     def __init__(self, *args, **kwargs):
+#         super().__init__(*args, **kwargs)
+#         # Reward Gradient Training Using LoRA as a default
+#         # TODO: use config and getattr to set default values
+#         # sampling configs for DDIM
+#         self.ddim_eta = 1.0 
+#         self.ddim_steps = 20 # reduce some steps to speed up sampling process 
+#         self.n_samples = 1
+#         self.fps = 24 # default 24 following VADER 
+#         # rlhf configs  
+#         self.backprop_mode = "last" #m"backpropagation mode: 'last', 'rand', 'specific'"
+#         self.decode_frame = -1  # it could also be any number str like '3', '10'. alt: alternate frames, fml: first, middle, last frames, all: all frames. '-1': random frame
+#         self.reward_loss_type = "aesthetic" 
+#         # self.configure_reward_loss()    
         
-    def configure_reward_loss(self,loss_type=None):
-        if loss_type is None:
-            loss_type = self.reward_loss_type
+#     def configure_reward_loss(self,loss_type=None):
+#         if loss_type is None:
+#             loss_type = self.reward_loss_type
             
-        if loss_type == "aesthetic":
-            self.loss_fn = aesthetic_loss_fn(grad_scale=0.1,
-                                        aesthetic_target=10,
-                                        torch_dtype = self.model.dtype,
-                                        device = self.device)
-        else:
-            raise NotImplementedError(f"loss type {loss_type} not implemented")
+#         if loss_type == "aesthetic":
+#             self.loss_fn = aesthetic_loss_fn(grad_scale=0.1,
+#                                         aesthetic_target=10,
+#                                         torch_dtype = self.model.dtype,
+#                                         device = self.device)
+#         else:
+#             raise NotImplementedError(f"loss type {loss_type} not implemented")
         
-    def on_train_batch_start(self, batch, batch_idx, dataloader_idx=None):
-        # the reason why configure here is to wait the model transfered to target device
-        # otherwise, the loss_fn will be on cpu if configure in __init__
-        self.configure_reward_loss()
-    def training_step(self, batch, batch_idx):
-        """training_step for Reward Model Feedback"""
-        # 构造输入,与denoise训练不一样的地方是这里不需要VAE encode ，只需要nosie shape 
-        # 默认的cond是text prompt
-        prompts = batch[self.cond_stage_key]
-        # print(prompts) #  Elon mask is talking
-        x, c = self.get_batch_input(
-            batch, random_uncond=self.classifier_free_guidance, is_imgbatch=False
-        ) # x is latent image ; c is text embedding(tensor)
-        kwargs ={}
-        batch_size = x.shape[0]
-        noise_shape = (batch_size, self.channels, self.temporal_length//4, *self.image_size)# (1, 4, 4, 40, 64)
-        # print("noise shape",noise_shape)
-        fps = torch.tensor([self.fps]*batch_size).to(self.device).long()
-        cond = {"c_crossattn": [c], "fps": fps}
-        # 注意这个batch_ddim_sampling是VADER自己改过的版本 
-        # 输入的cond 是 cond = {"c_crossattn": [text_emb], "fps": fps}
-        batch_samples = batch_ddim_sampling(self, cond, noise_shape, self.n_samples, \
-                                            self.ddim_steps, self.ddim_eta, self.classifier_free_guidance,\
-                                            None, backprop_mode=self.backprop_mode, decode_frame=self.decode_frame,\
-                                            **kwargs)
+#     def on_train_batch_start(self, batch, batch_idx, dataloader_idx=None):
+#         # the reason why configure here is to wait the model transfered to target device
+#         # otherwise, the loss_fn will be on cpu if configure in __init__
+#         self.configure_reward_loss()
+#     def training_step(self, batch, batch_idx):
+#         """training_step for Reward Model Feedback"""
+#         # 构造输入,与denoise训练不一样的地方是这里不需要VAE encode ，只需要nosie shape 
+#         # 默认的cond是text prompt
+#         prompts = batch[self.cond_stage_key]
+#         # print(prompts) #  Elon mask is talking
+#         x, c = self.get_batch_input(
+#             batch, random_uncond=self.classifier_free_guidance, is_imgbatch=False
+#         ) # x is latent image ; c is text embedding(tensor)
+#         kwargs ={}
+#         batch_size = x.shape[0]
+#         noise_shape = (batch_size, self.channels, self.temporal_length//4, *self.image_size)# (1, 4, 4, 40, 64)
+#         # print("noise shape",noise_shape)
+#         fps = torch.tensor([self.fps]*batch_size).to(self.device).long()
+#         cond = {"c_crossattn": [c], "fps": fps}
+#         # 注意这个batch_ddim_sampling是VADER自己改过的版本 
+#         # 输入的cond 是 cond = {"c_crossattn": [text_emb], "fps": fps}
+#         batch_samples = batch_ddim_sampling(self, cond, noise_shape, self.n_samples, \
+#                                             self.ddim_steps, self.ddim_eta, self.classifier_free_guidance,\
+#                                             None, backprop_mode=self.backprop_mode, decode_frame=self.decode_frame,\
+#                                             **kwargs)
 
-        video_frames_ = batch_samples.permute(1,0,3,2,4,5)      # batch,samples,channels,frames,height,width >> s,b,f,c,h,w
-        # print("video_frames shape",batch_samples.shape,video_frames_.requires_grad)
-        s_, bs, nf, c_, h_, w_ = video_frames_.shape
-        assert s_ == 1                                  # samples should only be on single sample in training mode
-        video_frames_ = video_frames_.squeeze(0)        # s,b,f,c,h,w >> b,f,c,h,w
-        assert nf == 1                                  # reward should only be on single frame
-        video_frames_ = video_frames_.squeeze(1)        # b,f,c,h,w >> b,c,h,w
-        video_frames_ = video_frames_.to(x.dtype)
+#         video_frames_ = batch_samples.permute(1,0,3,2,4,5)      # batch,samples,channels,frames,height,width >> s,b,f,c,h,w
+#         # print("video_frames shape",batch_samples.shape,video_frames_.requires_grad)
+#         s_, bs, nf, c_, h_, w_ = video_frames_.shape
+#         assert s_ == 1                                  # samples should only be on single sample in training mode
+#         video_frames_ = video_frames_.squeeze(0)        # s,b,f,c,h,w >> b,f,c,h,w
+#         assert nf == 1                                  # reward should only be on single frame
+#         video_frames_ = video_frames_.squeeze(1)        # b,f,c,h,w >> b,c,h,w
+#         video_frames_ = video_frames_.to(x.dtype)
 
-        # some reward fn may require prompts as input. 
-        loss, rewards = self.loss_fn(video_frames_)  # rewards is for logging only. 
-        loss_dict = {"reward_train_loss": loss.detach().item(), "step_reward": rewards.detach().item()}
-        self.log_dict(
-            loss_dict,
-            prog_bar=True,
-            logger=True,
-            on_step=True,
-            on_epoch=True,
-            sync_dist=False,
-        )
-        self.log(
-            "global_step",
-            self.global_step,
-            prog_bar=True,
-            logger=True,
-            on_step=True,
-            on_epoch=False,
-        )
-        if (batch_idx + 1) % self.log_every_t == 0:
-            mainlogger.info(
-                f"batch:{batch_idx}|epoch:{self.current_epoch} [globalstep:{self.global_step}]: loss={loss} reward={rewards}"
-            )
-        return loss
+#         # some reward fn may require prompts as input. 
+#         loss, rewards = self.loss_fn(video_frames_)  # rewards is for logging only. 
+#         loss_dict = {"reward_train_loss": loss.detach().item(), "step_reward": rewards.detach().item()}
+#         self.log_dict(
+#             loss_dict,
+#             prog_bar=True,
+#             logger=True,
+#             on_step=True,
+#             on_epoch=True,
+#             sync_dist=False,
+#         )
+#         self.log(
+#             "global_step",
+#             self.global_step,
+#             prog_bar=True,
+#             logger=True,
+#             on_step=True,
+#             on_epoch=False,
+#         )
+#         if (batch_idx + 1) % self.log_every_t == 0:
+#             mainlogger.info(
+#                 f"batch:{batch_idx}|epoch:{self.current_epoch} [globalstep:{self.global_step}]: loss={loss} reward={rewards}"
+#             )
+#         return loss
 
-    def configure_optimizers(self):
-        lr = self.learning_rate
-        opt = torch.optim.AdamW(self.model.parameters(), lr=lr)
-        # the training steps count is short no need for scheduler as default 
-        if self.use_scheduler:
-            lr_scheduler = self.configure_schedulers(opt)
-            return [opt], [lr_scheduler]
-        return opt
+#     def configure_optimizers(self):
+#         lr = self.learning_rate
+#         opt = torch.optim.AdamW(self.model.parameters(), lr=lr)
+#         # the training steps count is short no need for scheduler as default 
+#         if self.use_scheduler:
+#             lr_scheduler = self.configure_schedulers(opt)
+#             return [opt], [lr_scheduler]
+#         return opt
 
 
 class LatentVisualDiffusion(LatentDiffusion):
