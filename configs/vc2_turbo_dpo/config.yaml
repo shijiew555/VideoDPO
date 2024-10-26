@@ -1,14 +1,12 @@
 model:
   base_learning_rate: 6.0e-06 # 1.5e-04
   scale_lr: False
-  # empty_params_only: True # disable this means finetuning all parameters
-  # sd_checkpoint: /home/rliuay/haoyu/research/LVDM-UST-VideoCrafterft-master/init_ckpt/StableDiffusion/v2-1_512-ema-pruned.ckpt
   ref_model_checkpoint: /root/init_ckpt/vc2/ref_model.ckpt
   pretrained_checkpoint: /root/init_ckpt/vc2/model.ckpt
-  target: lvdm.models.ddpm3d.LatentDiffusion
+  target: lvdm.models.ddpm3d.T2VTurboDPO
   params:
     loss_type: dpo
-    log_every_t: 100
+    log_every_t: 200
     linear_start: 0.00085
     linear_end: 0.012
     num_timesteps_cond: 1
@@ -25,14 +23,14 @@ model:
     scale_factor: 0.18215
     use_ema: false
     uncond_type: empty_seq
-    monitor: val/loss_simple_ema
+    monitor: train/loss_simple_ema
     encoder_type: 2d
     use_scale: true
     scale_b: 0.7 # adapt to videocrafter-v2
-
     unet_config:
       target: lvdm.modules.networks.openaimodel3d.UNetModel
       params:
+        time_cond_proj_dim: 256 # turbo 
         in_channels: 4
         out_channels: 4
         model_channels: 320
@@ -98,46 +96,36 @@ data:
       params:
         data_root: configs/data/vidpro/train_data.yaml
         resolution: [320, 512]
-        video_length: 16
+        video_length: 2
         subset_split: all
     # validation:
-    #   target: data.macvid.MaCVidDPO
+    #   target: data.macvid.MaCVid
     #   params:
-    #     data_root: configs/data/vidpro/val_data.yaml
+    #     data_root: /home/liurt/liurt_data/haoyu/dataset/elon_musk_video/val_data.yaml
     #     resolution: [320, 512]
     #     video_length: 16
     #     subset_split: all
 
-lightning:
-  # strategy: deepspeed
-  callbacks:
-    image_logger:
-      target: utils.callbacks.ImageLogger
-      params:
-        to_local: True
-        save_dir: log_image
-        batch_frequency:  100000
-        max_images: 2
-        log_images_kwargs:
-          unconditional_guidance_scale: 12 # need this, otherwise it is grey
-        
-    metrics_over_trainsteps_checkpoint:
-      target: pytorch_lightning.callbacks.ModelCheckpoint
-      params:
-        filename: "step-{step:04}"
-        save_weights_only: True
-        every_n_epochs: null
-        every_n_train_steps: 499
+lightning:  
   trainer:
     benchmark: True
-    log_every_n_steps: 1
     # batch_size: 6
     num_workers: 10
     num_nodes: 1
-    accumulate_grad_batches: 2
-    max_epochs: 10 # for first step training max_epoch = 3 
-  modelcheckpoint:
-    target: pytorch_lightning.callbacks.ModelCheckpoint
-    params:
-      every_n_epochs: 1
-      filename: "{epoch:04}-{step:06}"
+    accumulate_grad_batches: 10
+    max_epochs: 50 # for first step training max_epoch = 3 
+  # strategy: deepspeed
+  callbacks:
+    model_checkpoint:
+      target: pytorch_lightning.callbacks.ModelCheckpoint
+      params:
+        every_n_train_steps: 9 #1000
+        filename: "{epoch:04}-{step:06}"
+        save_weights_only: True
+    metrics_over_trainsteps_checkpoint:
+      target: pytorch_lightning.callbacks.ModelCheckpoint
+      params:
+        filename: "{epoch:06}-{step:09}"
+        save_weights_only: True
+        every_n_train_steps: 10
+    

@@ -25,7 +25,7 @@ from torch.nn import functional as F
 from pytorch_lightning.utilities import rank_zero_only
 from torch.optim.lr_scheduler import CosineAnnealingLR, LambdaLR
 from torchvision.utils import make_grid
-from lvdm.modules.lora import inject_trainable_lora,tune_lora_scale,load_lora_state_dict,collapse_lora,monkeypatch_remove_lora
+# from lvdm.modules.lora import inject_trainable_lora,tune_lora_scale,load_lora_state_dict,collapse_lora,monkeypatch_remove_lora
 
 from lvdm.modules.utils import (
     disabled_train,
@@ -97,6 +97,7 @@ class DDPM(pl.LightningModule):
         if isinstance(self.image_size, int):
             self.image_size = [self.image_size, self.image_size]
         self.use_positional_encodings = use_positional_encodings
+
         self.model = DiffusionWrapper(unet_config, conditioning_key)
         # count_params(self.model, verbose=True)
         self.use_ema = use_ema
@@ -392,7 +393,7 @@ class DDPM(pl.LightningModule):
         implicit_acc = (inside_term > 0).sum().float() / inside_term.size(0)
         # log implicit acc for 
         self.log(
-            "implicit_acc",implicit_acc,
+            "train/implicit_acc",implicit_acc,
             prog_bar=True,
             logger=True,
             on_step=True,
@@ -1014,7 +1015,7 @@ class LatentDiffusion(DDPM):
                 0, self.num_timesteps, (x.shape[0],), device=self.device
             ).long()
             t = t//2 # [0,500]
-            t += self.num_timesteps//2 #[500,1000]
+            # t += self.num_timesteps//2 #[500,1000]
             # mean = 0      # 均值设为0
             # std = 1000    # 标准差设为1000
             # 从高斯分布中采样，并将负数取绝对值，再取整
@@ -1539,18 +1540,87 @@ class LatentDiffusion(DDPM):
             raise NotImplementedError
         return lr_scheduler
 
-    # def on_save_checkpoint(self, checkpoint):
-    #     # Remove reference model from checkpoint
-    #     # since it won't be changed
-    #     # and keep consistent to original model
-    #     # checkpoint contain statedict
-    #     print("==========saving checkpoint in ddpm3d=========")
-    #     keys_to_remove = [
-    #         key for key in checkpoint["state_dict"].keys() if "ref_model" in key
-    #     ]
-    #     for key in keys_to_remove:
-    #         checkpoint["state_dict"].pop(key, None)
-    #     return checkpoint
+    def on_save_checkpoint(self, checkpoint):
+        # Remove reference model from checkpoint
+        # since it won't be changed
+        # and keep consistent to original model
+        # checkpoint contain statedict
+        print("==========saving checkpoint in ddpm3d=========")
+        keys_to_remove = [
+            key for key in checkpoint["state_dict"].keys() if "ref_model" in key
+        ]
+        for key in keys_to_remove:
+            checkpoint["state_dict"].pop(key, None)
+        return checkpoint
+from lvdm.models.turbo_utils.lora import save_lora_weight,extract_lora_ups_down
+from lvdm.models.turbo_utils.lora_handler import LoraHandler
+from lvdm.models.turbo_utils.lora import collapse_lora, monkeypatch_remove_lora
+class T2VTurboDPO(LatentDiffusion):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.loss_type = "dpo"
+        # with open("before_lora.txt",'w') as f:
+        #     for n,p in self.model.named_parameters():
+        #         f.write(f"{n} {p.shape}\n")
+        # self._freeze_model()
+        use_unet_lora = True
+        # import pdb; pdb.set_trace()
+        # lora_manager = LoraHandler(
+        #     version="cloneofsimo",
+        #     use_unet_lora=use_unet_lora,
+        #     save_for_webui=True,
+        #     unet_replace_modules=["UNetModel"],
+        # )
+        # pretrained_unet_path="/root/autodl-tmp/unet_lora.pt"
+        # # import pdb; pdb.set_trace()
+        # unet_lora_params, unet_negation = lora_manager.add_lora_to_model(
+        #     use_unet_lora,
+        #     self.model,
+        #     lora_manager.unet_replace_modules,
+        #     lora_path=pretrained_unet_path,
+        #     dropout=0.1,
+        #     r=64,
+        # )
+        
+        # for name,param in self.model.named_parameters():
+        #     if "lora" in name:
+        #         param.requires_grad = True
+        #     else:
+        #         param.requires_grad = False
+        # with open("after_lora_no_ckpt.txt",'w') as f:
+        #     for n,p in self.model.named_parameters():
+        #         f.write(f"{n} {p.shape}\n")
+        # for name,param in self.model.named_parameters():
+        #     if "lora" in name:
+        #         print(param.shape)
+        # self.model.eval()
+        # collapse_lora(self.model, lora_manager.unet_replace_modules)
+        # monkeypatch_remove_lora(self.model)
+        # with open("after_collapse.txt",'w') as f:
+        #     for n,p in self.model.named_parameters():
+        #         f.write(f"{n} {p.shape}\n")
+        import copy
+        # import gc
+        # self.ref_model = copy.deepcopy(self.model)
+        # collapse_lora(self.ref_model, lora_manager.unet_replace_modules)
+        # monkeypatch_remove_lora(self.ref_model)
+        # # 禁用 ref_model 的梯度计算
+        for param in self.ref_model.parameters():
+            param.requires_grad = False
+        # gc.collect()  # Python垃圾回收
+        # if torch.cuda.is_available():
+        #     torch.cuda.empty_cache()  # 释放GPU显存
+    def on_save_checkpoint(self,checkpoint):
+        weights = []
+        for _up, _down in extract_lora_ups_down(
+            self.model
+        ):
+            weights.append(_up.weight.to("cpu").to(torch.float32))
+            weights.append(_down.weight.to("cpu").to(torch.float32))
+            print(_up.weight.shape,_down.weight.shape)
+        checkpoint['state_dict']=weights
+        return checkpoint
+
 
 # # import rlhf utils 
 # from lvdm.models.rlhf_utils.batch_ddim import batch_ddim_sampling
