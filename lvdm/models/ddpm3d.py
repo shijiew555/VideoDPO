@@ -1049,7 +1049,6 @@ class LatentDiffusion(DDPM):
             batch, random_uncond=random_uncond, is_imgbatch=is_imgbatch
         )
         loss, loss_dict = self(x, c, is_imgbatch=is_imgbatch, **kwargs)
-        
         return loss, loss_dict
 
     def apply_model(self, x_noisy, t, cond, **kwargs):

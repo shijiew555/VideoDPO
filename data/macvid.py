@@ -166,7 +166,7 @@ class MaCVidDPO(Dataset):
                 for item in pairs:
                     # under the pair.json after 0601,label_key has no use
                     self.pairs.append(
-                        [item["video1"], item["video2"], item["frame_caption"]]
+                        [item["video1"], item["video2"], item["frame_caption"],item['score']]
                     )
                     # if item[label_key] == 0:
                     #     # put video2 first
@@ -180,7 +180,7 @@ class MaCVidDPO(Dataset):
         return len(self.pairs)
 
     def __getitem__(self, index):
-        videowidx, videolidx, frame_caption = self.pairs[index]
+        videowidx, videolidx, frame_caption,score = self.pairs[index]
         videow = self.data[videowidx]["video"]
         videol = self.data[videolidx]["video"]
         # print(f"video idx {videowidx} {videolidx}")
@@ -193,4 +193,4 @@ class MaCVidDPO(Dataset):
             frame_caption = frame_caption[0]
         # print("in dataloader getitem",combined_frames.shape)
         # exit()
-        return {"video": combined_frames, "caption": frame_caption}
+        return {"video": combined_frames, "caption": frame_caption,"dupfactor":score}
