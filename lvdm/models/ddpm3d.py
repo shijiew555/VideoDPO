@@ -389,16 +389,25 @@ class DDPM(pl.LightningModule):
             raw_ref_loss = ref_losses.mean()
         scale_term = -0.5 * self.beta_dpo
         inside_term = scale_term * (model_diff - ref_diff)
+        # print()
         implicit_acc = (inside_term > 0).sum().float() / inside_term.size(0)
         # log implicit acc for 
         self.log(
-            "implicit_acc",implicit_acc,
+            "train/implicit_acc",implicit_acc,
             prog_bar=True,
             logger=True,
             on_step=True,
             on_epoch=False,
         )
-        loss = -1 * F.logsigmoid(inside_term).mean()
+        # TODO: fix this duplicat pass path 
+        # print(self.dupfactor,"inside term",inside_term.shape)
+        factor = 0.72 / self.dupfactor # scale up factor 
+        self.log(
+            "train/factor",float(factor.clone().mean().detach().cpu()),
+        prog_bar=False,logger=True,
+        on_step=True,on_epoch=False,
+        )
+        loss = ( -1* factor * F.logsigmoid(inside_term)).mean()
         return loss
 
     def get_loss(self, pred, target, mean=True):
@@ -498,7 +507,7 @@ class DDPM(pl.LightningModule):
             self.log(
                 "lr_abs", lr, prog_bar=True, logger=True, on_step=True, on_epoch=False
             )
-
+        torch.cuda.empty_cache()
         return loss
 
     @torch.no_grad()
@@ -1013,8 +1022,8 @@ class LatentDiffusion(DDPM):
             t = torch.randint(
                 0, self.num_timesteps, (x.shape[0],), device=self.device
             ).long()
-            t = t//2 # [0,500]
-            t += self.num_timesteps//2 #[500,1000]
+            # t = t//2 # [0,500]
+            # t += self.num_timesteps//2 #[500,1000]
             # mean = 0      # 均值设为0
             # std = 1000    # 标准差设为1000
             # 从高斯分布中采样，并将负数取绝对值，再取整
@@ -1039,11 +1048,15 @@ class LatentDiffusion(DDPM):
                 batch = batch["loader_video"]
         else:
             pass
-
+        # dupfactor 
+        self.dupfactor = batch['dupfactor']
         x, c = self.get_batch_input(
             batch, random_uncond=random_uncond, is_imgbatch=is_imgbatch
         )
         loss, loss_dict = self(x, c, is_imgbatch=is_imgbatch, **kwargs)
+
+        # loss *= dupfactor 
+        # print(dupfactor)
         return loss, loss_dict
 
     def apply_model(self, x_noisy, t, cond, **kwargs):
@@ -1539,18 +1552,18 @@ class LatentDiffusion(DDPM):
             raise NotImplementedError
         return lr_scheduler
 
-    # def on_save_checkpoint(self, checkpoint):
-    #     # Remove reference model from checkpoint
-    #     # since it won't be changed
-    #     # and keep consistent to original model
-    #     # checkpoint contain statedict
-    #     print("==========saving checkpoint in ddpm3d=========")
-    #     keys_to_remove = [
-    #         key for key in checkpoint["state_dict"].keys() if "ref_model" in key
-    #     ]
-    #     for key in keys_to_remove:
-    #         checkpoint["state_dict"].pop(key, None)
-    #     return checkpoint
+    def on_save_checkpoint(self, checkpoint):
+        # Remove reference model from checkpoint
+        # since it won't be changed
+        # and keep consistent to original model
+        # checkpoint contain statedict
+        print("==========saving checkpoint in ddpm3d=========")
+        keys_to_remove = [
+            key for key in checkpoint["state_dict"].keys() if "ref_model" in key
+        ]
+        for key in keys_to_remove:
+            checkpoint["state_dict"].pop(key, None)
+        return checkpoint
 
 # # import rlhf utils 
 # from lvdm.models.rlhf_utils.batch_ddim import batch_ddim_sampling

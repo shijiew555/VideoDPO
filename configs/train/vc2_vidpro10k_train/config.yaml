@@ -3,12 +3,12 @@ model:
   scale_lr: False
   # empty_params_only: True # disable this means finetuning all parameters
   # sd_checkpoint: /home/rliuay/haoyu/research/LVDM-UST-VideoCrafterft-master/init_ckpt/StableDiffusion/v2-1_512-ema-pruned.ckpt
-  ref_model_checkpoint: /root/autodl-tmp/init_ckpt/vc2/ref_model.ckpt
-  pretrained_checkpoint: /root/autodl-tmp/init_ckpt/vc2/model.ckpt
+  ref_model_checkpoint: /root/init_ckpt/vc2/ref_model.ckpt
+  pretrained_checkpoint: /root/init_ckpt/vc2/model.ckpt
   target: lvdm.models.ddpm3d.LatentDiffusion
   params:
     loss_type: dpo
-    log_every_t: 2
+    log_every_t: 100
     linear_start: 0.00085
     linear_end: 0.012
     num_timesteps_cond: 1
@@ -130,6 +130,7 @@ lightning:
         every_n_train_steps: 499
   trainer:
     benchmark: True
+    log_every_n_steps: 1
     # batch_size: 6
     num_workers: 10
     num_nodes: 1
