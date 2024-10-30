@@ -378,6 +378,7 @@ class DDPM(pl.LightningModule):
         )
 
     def dpo_loss(self, target, pred):
+        # import pdb;pdb.set_trace()
         model_losses = (pred - target).pow(2).mean(dim=[1, 2, 3])
         model_losses_w, model_losses_l = model_losses.chunk(2)
         raw_model_loss = 0.5 * (model_losses_w.mean() + model_losses_l.mean())
@@ -1623,19 +1624,32 @@ class T2VTurboDPO(LatentDiffusion):
             dropout=0.1,
             r=64,
         )
-        
-        # for name,param in self.model.named_parameters():
-        #     if "lora" in name:
-        #         param.requires_grad = True
-        #     else:
-        #         param.requires_grad = False
+        # update ref_model 
+        lora_manager = LoraHandler(
+            version="cloneofsimo",
+            use_unet_lora=use_unet_lora,
+            save_for_webui=True,
+            unet_replace_modules=["UNetModel"],
+        )
+        pretrained_unet_path="/root/autodl-tmp/unet_lora.pt"
+        # import pdb; pdb.set_trace()
+        unet_lora_params, unet_negation = lora_manager.add_lora_to_model(
+            use_unet_lora,
+            self.ref_model,
+            lora_manager.unet_replace_modules,
+            lora_path=pretrained_unet_path,
+            dropout=0.1,
+            r=64,
+        )
+        for name,param in self.ref_model.named_parameters():
+            param.requires_grad = False
         # with open("after_lora_no_ckpt.txt",'w') as f:
         #     for n,p in self.model.named_parameters():
         #         f.write(f"{n} {p.shape}\n")
         # for name,param in self.model.named_parameters():
         #     if "lora" in name:
         #         print(param.shape)
-        # self.model.eval()
+        self.ref_model.eval()
         # collapse_lora(self.model, lora_manager.unet_replace_modules)
         # monkeypatch_remove_lora(self.model)
         # with open("after_collapse.txt",'w') as f:
@@ -1643,9 +1657,9 @@ class T2VTurboDPO(LatentDiffusion):
         #         f.write(f"{n} {p.shape}\n")
         import copy
         # import gc
-        self.ref_model = copy.deepcopy(self.model)
-        collapse_lora(self.ref_model, lora_manager.unet_replace_modules)
-        monkeypatch_remove_lora(self.ref_model)
+        # self.ref_model = copy.deepcopy(self.model)
+        # collapse_lora(self.ref_model, lora_manager.unet_replace_modules)
+        # monkeypatch_remove_lora(self.ref_model)
         # # 禁用 ref_model 的梯度计算
         for param in self.ref_model.parameters():
             param.requires_grad = False
@@ -1662,7 +1676,7 @@ class T2VTurboDPO(LatentDiffusion):
             0, self.num_ddim_timesteps, (x.shape[0],), device=self.device
         ).long()
         self.solver = self.solver.to(self.device)
-        print(index.device,self.solver.ddim_timesteps.device,self.solver.ddim_timesteps.dtype)
+        # print(index.device,self.solver.ddim_timesteps.device,self.solver.ddim_timesteps.dtype)
         start_timesteps = self.solver.ddim_timesteps[index]
         return self.p_losses(x,c,t=start_timesteps , *args, **kwargs)
     def q_sample(self, x_start, t, noise=None):
@@ -1699,7 +1713,7 @@ class T2VTurboDPO(LatentDiffusion):
         ):
             weights.append(_up.weight.to("cpu").to(torch.float32))
             weights.append(_down.weight.to("cpu").to(torch.float32))
-            print(_up.weight.shape,_down.weight.shape)
+            # print(_up.weight.shape,_down.weight.shape)
         checkpoint['state_dict']=weights
         return checkpoint
 
