@@ -119,7 +119,7 @@ lightning:
     model_checkpoint:
       target: pytorch_lightning.callbacks.ModelCheckpoint
       params:
-        every_n_train_steps: 99 #1000
+        every_n_train_steps: 499 #1000
         filename: "{epoch:04}-{step:06}"
         save_weights_only: True
     metrics_over_trainsteps_checkpoint:
@@ -127,5 +127,5 @@ lightning:
       params:
         filename: "{epoch:06}-{step:09}"
         save_weights_only: True
-        every_n_train_steps: 200
+        every_n_train_steps: 100
     

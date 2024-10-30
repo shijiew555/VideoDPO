@@ -3,7 +3,7 @@ import numpy as np
 import cv2, os
 import torch
 import torch.distributed as dist
-
+import gc
 
 def count_params(model, verbose=False):
     total_params = sum(p.numel() for p in model.parameters())
@@ -75,3 +75,17 @@ def setup_dist(args):
         return
     torch.cuda.set_device(args.local_rank)
     torch.distributed.init_process_group("nccl", init_method="env://")
+
+def load_model_checkpoint(model, ckpt):
+    def load_checkpoint(model, ckpt, full_strict):
+        state_dict = torch.load(ckpt, map_location="cpu")
+        if "state_dict" in list(state_dict.keys()):
+            state_dict = state_dict["state_dict"]
+        model.load_state_dict(state_dict, strict=full_strict)
+        del state_dict
+        gc.collect()
+        return model
+
+    load_checkpoint(model, ckpt, full_strict=True)
+    print(">>> model checkpoint loaded.")
+    return model

@@ -10,13 +10,13 @@ LOGDIR="./results/baselines"  # experiment saving directory all should under sub
 
 # ### run
 python scripts/train.py \
--t --devices '0,1,2,3' \
+-t --devices '1' \
 lightning.trainer.num_nodes=1 \
 --base $CONFIG \
 --name "$current_time"_$EXPNAME \
 --logdir $LOGDIR \
 --auto_resume True \
---gpu_num 4
+--gpu_num 1
 
 
 # python -m torch.distributed.run \

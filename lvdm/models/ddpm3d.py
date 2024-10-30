@@ -1709,11 +1709,13 @@ class T2VTurboDPO(LatentDiffusion):
     def on_save_checkpoint(self,checkpoint):
         weights = []
         for _up, _down in extract_lora_ups_down(
-            self.model
+            self.model,target_replace_module={"UNetModel"}
         ):
             weights.append(_up.weight.to("cpu").to(torch.float32))
             weights.append(_down.weight.to("cpu").to(torch.float32))
-            # print(_up.weight.shape,_down.weight.shape)
+            # print(_up.weight.shape,_down.weight.shape)\
+        # import pdb;pdb.set_trace()
+        print("len of weights",len(weights))
         checkpoint['state_dict']=weights
         return checkpoint
 
