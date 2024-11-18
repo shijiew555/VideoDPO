@@ -76,7 +76,8 @@ class DDPM(pl.LightningModule):
         use_positional_encodings=False,
         learn_logvar=False,
         logvar_init=0.0,
-        beta_dpo=5000.0,
+        beta_dpo=5000.0, # dpo config 
+        dupbeta=1, # dpo config 
     ):
         super().__init__()
         assert parameterization in [
@@ -137,16 +138,12 @@ class DDPM(pl.LightningModule):
 
         # add loss dpo
         if self.loss_type == "dpo":
-            # for consistency ref_unet is renamed to ref_model
-            # if with torch no grad ？ still need require grad =False ?
-
             self.ref_model = DiffusionWrapper(unet_config, conditioning_key)
-
-            
             # freeze all
             for param in self.ref_model.diffusion_model.parameters():
                 param.requires_grad = False
             self.beta_dpo = beta_dpo
+            self.dupbeta = dupbeta
 
     def register_schedule(
         self,
@@ -389,16 +386,23 @@ class DDPM(pl.LightningModule):
             raw_ref_loss = ref_losses.mean()
         scale_term = -0.5 * self.beta_dpo
         inside_term = scale_term * (model_diff - ref_diff)
+        # print()
         implicit_acc = (inside_term > 0).sum().float() / inside_term.size(0)
         # log implicit acc for 
         self.log(
-            "implicit_acc",implicit_acc,
+            "train/implicit_acc",implicit_acc,
             prog_bar=True,
             logger=True,
             on_step=True,
             on_epoch=False,
         )
-        loss = -1 * F.logsigmoid(inside_term).mean()
+        factor = (0.72 / self.dupfactor)**self.dupbeta # scale up factor 
+        loss = ( -1 * factor * F.logsigmoid(inside_term)).mean()
+        self.log(
+            "train/factor",float(factor.clone().mean().detach().cpu()),
+            prog_bar=False,logger=True,
+            on_step=True,on_epoch=False,
+        )
         return loss
 
     def get_loss(self, pred, target, mean=True):
@@ -498,7 +502,7 @@ class DDPM(pl.LightningModule):
             self.log(
                 "lr_abs", lr, prog_bar=True, logger=True, on_step=True, on_epoch=False
             )
-
+        torch.cuda.empty_cache()
         return loss
 
     @torch.no_grad()
@@ -1013,8 +1017,8 @@ class LatentDiffusion(DDPM):
             t = torch.randint(
                 0, self.num_timesteps, (x.shape[0],), device=self.device
             ).long()
-            t = t//2 # [0,500]
-            t += self.num_timesteps//2 #[500,1000]
+            # t = t//2 # [0,500]
+            # t += self.num_timesteps//2 #[500,1000]
             # mean = 0      # 均值设为0
             # std = 1000    # 标准差设为1000
             # 从高斯分布中采样，并将负数取绝对值，再取整
@@ -1039,11 +1043,13 @@ class LatentDiffusion(DDPM):
                 batch = batch["loader_video"]
         else:
             pass
-
+        # dupfactor 
+        self.dupfactor = batch['dupfactor']
         x, c = self.get_batch_input(
             batch, random_uncond=random_uncond, is_imgbatch=is_imgbatch
         )
         loss, loss_dict = self(x, c, is_imgbatch=is_imgbatch, **kwargs)
+        
         return loss, loss_dict
 
     def apply_model(self, x_noisy, t, cond, **kwargs):
@@ -1153,6 +1159,7 @@ class LatentDiffusion(DDPM):
             mainlogger.info(
                 f"batch:{batch_idx}|epoch:{self.current_epoch} [globalstep:{self.global_step}]: loss={loss}"
             )
+        torch.cuda.empty_cache()
         return loss
 
     def _get_denoise_row_from_list(self, samples, desc=""):
@@ -1539,18 +1546,18 @@ class LatentDiffusion(DDPM):
             raise NotImplementedError
         return lr_scheduler
 
-    # def on_save_checkpoint(self, checkpoint):
-    #     # Remove reference model from checkpoint
-    #     # since it won't be changed
-    #     # and keep consistent to original model
-    #     # checkpoint contain statedict
-    #     print("==========saving checkpoint in ddpm3d=========")
-    #     keys_to_remove = [
-    #         key for key in checkpoint["state_dict"].keys() if "ref_model" in key
-    #     ]
-    #     for key in keys_to_remove:
-    #         checkpoint["state_dict"].pop(key, None)
-    #     return checkpoint
+    def on_save_checkpoint(self, checkpoint):
+        # Remove reference model from checkpoint
+        # since it won't be changed
+        # and keep consistent to original model
+        # checkpoint contain statedict
+        print("==========saving checkpoint in ddpm3d=========")
+        keys_to_remove = [
+            key for key in checkpoint["state_dict"].keys() if "ref_model" in key
+        ]
+        for key in keys_to_remove:
+            checkpoint["state_dict"].pop(key, None)
+        return checkpoint
 
 # # import rlhf utils 
 # from lvdm.models.rlhf_utils.batch_ddim import batch_ddim_sampling
