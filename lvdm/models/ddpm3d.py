@@ -1158,7 +1158,6 @@ class LatentDiffusion(DDPM):
             mainlogger.info(
                 f"batch:{batch_idx}|epoch:{self.current_epoch} [globalstep:{self.global_step}]: loss={loss}"
             )
-        torch.cuda.empty_cache()
         return loss
 
     def _get_denoise_row_from_list(self, samples, desc=""):
