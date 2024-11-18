@@ -1,10 +1,8 @@
-name="base_512_v2"
-
-ckpt='./results_dpo/20240522120947_overfit_t2v512_dpo/checkpoints/last.ckpt'
+ckpt='checkpoints/vc2/model.ckpt'
 config='configs/inference/inference_t2v_512_v2.0.yaml'
-
 prompt_file="prompts/test_prompts.txt"
-res_dir="results_dpo_overfit"
+res_dir="results"
+name="base_512_v2"
 
 python3 scripts/inference.py \
 --seed 123 \
