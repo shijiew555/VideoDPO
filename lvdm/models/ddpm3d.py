@@ -78,6 +78,8 @@ class DDPM(pl.LightningModule):
         logvar_init=0.0,
         beta_dpo=5000.0, # dpo config 
         dupbeta=1, # dpo config 
+        beta_dpo=5000.0, # dpo config 
+        dupbeta=1, # dpo config 
     ):
         super().__init__()
         assert parameterization in [
@@ -1049,6 +1051,9 @@ class LatentDiffusion(DDPM):
             batch, random_uncond=random_uncond, is_imgbatch=is_imgbatch
         )
         loss, loss_dict = self(x, c, is_imgbatch=is_imgbatch, **kwargs)
+
+        # loss *= dupfactor 
+        # print(dupfactor)
         return loss, loss_dict
 
     def apply_model(self, x_noisy, t, cond, **kwargs):
@@ -1158,6 +1163,8 @@ class LatentDiffusion(DDPM):
             mainlogger.info(
                 f"batch:{batch_idx}|epoch:{self.current_epoch} [globalstep:{self.global_step}]: loss={loss}"
             )
+
+        torch.cuda.empty_cache()
         return loss
 
     def _get_denoise_row_from_list(self, samples, desc=""):

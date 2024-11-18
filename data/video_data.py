@@ -1,6 +1,5 @@
 """
-@author xiaowei
-UNFINISHED UNFINISHED UNFINISHED
+modified from @author xiaowei MACVID dataset 
 """
 
 import os
@@ -14,7 +13,7 @@ import pandas as pd
 import yaml
 
 
-class MaCVid(Dataset):
+class TextVideo(Dataset):
     """
     Data is structured as follows.
         |video_dataset_0
@@ -129,7 +128,7 @@ class MaCVid(Dataset):
 """
 
 
-class MaCVidDPO(Dataset):
+class TextVideoDPO(Dataset):
     """
     Data is structured as follows.
         |video_dataset_0
@@ -148,7 +147,7 @@ class MaCVidDPO(Dataset):
         subset_split="all",
         clip_length=1.0,
     ):
-        self.data = MaCVid(
+        self.data = TextVideo(
             data_root, resolution, video_length, frame_stride, subset_split, clip_length
         )
         self.pairs = []

@@ -1,4 +1,11 @@
+# checkpoints
+
+save checkpoints to `checkpoints/vc2/model.ckpt`
+use `python utils/create_ref_model.py` to create `ref_model.ckpt`
+
+
 # Install
+
 Already adjust requirements.txt to H800.
 ```shell
 conda create -n videocrafter python=3.8
