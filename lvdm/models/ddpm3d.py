@@ -76,7 +76,8 @@ class DDPM(pl.LightningModule):
         use_positional_encodings=False,
         learn_logvar=False,
         logvar_init=0.0,
-        beta_dpo=5000.0,
+        beta_dpo=5000.0, # dpo config 
+        dupbeta=1, # dpo config 
     ):
         super().__init__()
         assert parameterization in [
@@ -137,16 +138,12 @@ class DDPM(pl.LightningModule):
 
         # add loss dpo
         if self.loss_type == "dpo":
-            # for consistency ref_unet is renamed to ref_model
-            # if with torch no grad ？ still need require grad =False ?
-
             self.ref_model = DiffusionWrapper(unet_config, conditioning_key)
-
-            
             # freeze all
             for param in self.ref_model.diffusion_model.parameters():
                 param.requires_grad = False
             self.beta_dpo = beta_dpo
+            self.dupbeta = dupbeta
 
     def register_schedule(
         self,
@@ -399,16 +396,13 @@ class DDPM(pl.LightningModule):
             on_step=True,
             on_epoch=False,
         )
-        # TODO: fix this duplicat pass path 
-        # print(self.dupfactor,"inside term",inside_term.shape)
-        self.dupbeta = 1
         factor = (0.72 / self.dupfactor)**self.dupbeta # scale up factor 
+        loss = ( -1 * factor * F.logsigmoid(inside_term)).mean()
         self.log(
             "train/factor",float(factor.clone().mean().detach().cpu()),
-        prog_bar=False,logger=True,
-        on_step=True,on_epoch=False,
+            prog_bar=False,logger=True,
+            on_step=True,on_epoch=False,
         )
-        loss = ( -1* factor * F.logsigmoid(inside_term)).mean()
         return loss
 
     def get_loss(self, pred, target, mean=True):
@@ -1055,9 +1049,7 @@ class LatentDiffusion(DDPM):
             batch, random_uncond=random_uncond, is_imgbatch=is_imgbatch
         )
         loss, loss_dict = self(x, c, is_imgbatch=is_imgbatch, **kwargs)
-
-        # loss *= dupfactor 
-        # print(dupfactor)
+        
         return loss, loss_dict
 
     def apply_model(self, x_noisy, t, cond, **kwargs):
@@ -1167,7 +1159,6 @@ class LatentDiffusion(DDPM):
             mainlogger.info(
                 f"batch:{batch_idx}|epoch:{self.current_epoch} [globalstep:{self.global_step}]: loss={loss}"
             )
-
         torch.cuda.empty_cache()
         return loss
 
