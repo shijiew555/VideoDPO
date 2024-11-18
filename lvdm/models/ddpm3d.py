@@ -401,7 +401,8 @@ class DDPM(pl.LightningModule):
         )
         # TODO: fix this duplicat pass path 
         # print(self.dupfactor,"inside term",inside_term.shape)
-        factor = 0.72 / self.dupfactor # scale up factor 
+        self.dupbeta = 1
+        factor = (0.72 / self.dupfactor)**self.dupbeta # scale up factor 
         self.log(
             "train/factor",float(factor.clone().mean().detach().cpu()),
         prog_bar=False,logger=True,
@@ -1166,6 +1167,8 @@ class LatentDiffusion(DDPM):
             mainlogger.info(
                 f"batch:{batch_idx}|epoch:{self.current_epoch} [globalstep:{self.global_step}]: loss={loss}"
             )
+
+        torch.cuda.empty_cache()
         return loss
 
     def _get_denoise_row_from_list(self, samples, desc=""):
