@@ -104,20 +104,20 @@ def run_inference(args, gpu_num, gpu_no, **kwargs):
         args.ckpt_path
     ), f"Error: checkpoint [{args.ckpt_path}] Not Found!"
     model = load_model_checkpoint(model, args.ckpt_path)
-    print("-----------------unit test for lora --------------------------")
-    lora_ckpt = "/project/llmsvgen/runtao/haoyu_data/haoyu/research/code_version/24-07-27_ft-DPOcode0727/DPO-videocrafter/results/dpo-vc2-9th/total_score_0P_20240815002150/checkpoints/last.ckpt"
-    model.inject_lora()
-    cnt = 0 
-    with open("./inference_model.txt",'w') as f:
-        for name, para in model.named_parameters():
-            if para.requires_grad:
-                f.write(f"({cnt}) [train] {name}  {para.shape} \n")
-            else:
-                f.write(f"({cnt}) [freeze] {name}  {para.shape} \n")
-            cnt+=1 
-    import pdb;pdb.set_trace();
-    model.load_lora_from_ckpt(lora_ckpt)
-    print("-----------------unit test for lora --------------------------")
+    # print("-----------------unit test for lora --------------------------")
+    # lora_ckpt = "/project/llmsvgen/runtao/haoyu_data/haoyu/research/code_version/24-07-27_ft-DPOcode0727/DPO-videocrafter/results/dpo-vc2-9th/total_score_0P_20240815002150/checkpoints/last.ckpt"
+    # model.inject_lora()
+    # cnt = 0 
+    # with open("./inference_model.txt",'w') as f:
+    #     for name, para in model.named_parameters():
+    #         if para.requires_grad:
+    #             f.write(f"({cnt}) [train] {name}  {para.shape} \n")
+    #         else:
+    #             f.write(f"({cnt}) [freeze] {name}  {para.shape} \n")
+    #         cnt+=1 
+    # import pdb;pdb.set_trace();
+    # model.load_lora_from_ckpt(lora_ckpt)
+    # print("-----------------unit test for lora --------------------------")
     model.eval()
     ## sample shape
     assert (args.height % 16 == 0) and (
