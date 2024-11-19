@@ -71,8 +71,9 @@ def batch_ddim_sampling(
                 x_T=x_T,
                 **kwargs,
             )
+            torch.cuda.empty_cache()
         ## reconstruct from latent to pixel space
-        batch_images = model.decode_first_stage_2DAE(samples)
+        batch_images = model.decode_first_stage(samples)
         batch_variants.append(batch_images)
     ## batch, <samples>, c, t, h, w
     batch_variants = torch.stack(batch_variants, dim=1)
