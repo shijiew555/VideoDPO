@@ -25,7 +25,7 @@ from torch.nn import functional as F
 from pytorch_lightning.utilities import rank_zero_only
 from torch.optim.lr_scheduler import CosineAnnealingLR, LambdaLR
 from torchvision.utils import make_grid
-# from lvdm.modules.lora import inject_trainable_lora,tune_lora_scale,load_lora_state_dict,collapse_lora,monkeypatch_remove_lora
+from lvdm.modules.lora import inject_trainable_lora,tune_lora_scale,load_lora_state_dict,collapse_lora,monkeypatch_remove_lora
 
 from lvdm.modules.utils import (
     disabled_train,
@@ -76,7 +76,8 @@ class DDPM(pl.LightningModule):
         use_positional_encodings=False,
         learn_logvar=False,
         logvar_init=0.0,
-        beta_dpo=5000.0,
+        beta_dpo=5000.0, # dpo config 
+        dupbeta=1, # dpo config 
     ):
         super().__init__()
         assert parameterization in [
@@ -97,7 +98,6 @@ class DDPM(pl.LightningModule):
         if isinstance(self.image_size, int):
             self.image_size = [self.image_size, self.image_size]
         self.use_positional_encodings = use_positional_encodings
-
         self.model = DiffusionWrapper(unet_config, conditioning_key)
         # count_params(self.model, verbose=True)
         self.use_ema = use_ema
@@ -138,16 +138,12 @@ class DDPM(pl.LightningModule):
 
         # add loss dpo
         if self.loss_type == "dpo":
-            # for consistency ref_unet is renamed to ref_model
-            # if with torch no grad ？ still need require grad =False ?
-
             self.ref_model = DiffusionWrapper(unet_config, conditioning_key)
-
-            
             # freeze all
             for param in self.ref_model.diffusion_model.parameters():
                 param.requires_grad = False
             self.beta_dpo = beta_dpo
+            self.dupbeta = dupbeta
 
     def register_schedule(
         self,
@@ -378,7 +374,6 @@ class DDPM(pl.LightningModule):
         )
 
     def dpo_loss(self, target, pred):
-        # import pdb;pdb.set_trace()
         model_losses = (pred - target).pow(2).mean(dim=[1, 2, 3])
         model_losses_w, model_losses_l = model_losses.chunk(2)
         raw_model_loss = 0.5 * (model_losses_w.mean() + model_losses_l.mean())
@@ -391,6 +386,7 @@ class DDPM(pl.LightningModule):
             raw_ref_loss = ref_losses.mean()
         scale_term = -0.5 * self.beta_dpo
         inside_term = scale_term * (model_diff - ref_diff)
+        # print()
         implicit_acc = (inside_term > 0).sum().float() / inside_term.size(0)
         # log implicit acc for 
         self.log(
@@ -400,7 +396,13 @@ class DDPM(pl.LightningModule):
             on_step=True,
             on_epoch=False,
         )
-        loss = -1 * F.logsigmoid(inside_term).mean()
+        factor = (0.72 / self.dupfactor)**self.dupbeta # scale up factor 
+        loss = ( -1 * factor * F.logsigmoid(inside_term)).mean()
+        self.log(
+            "train/factor",float(factor.clone().mean().detach().cpu()),
+            prog_bar=False,logger=True,
+            on_step=True,on_epoch=False,
+        )
         return loss
 
     def get_loss(self, pred, target, mean=True):
@@ -500,7 +502,7 @@ class DDPM(pl.LightningModule):
             self.log(
                 "lr_abs", lr, prog_bar=True, logger=True, on_step=True, on_epoch=False
             )
-
+        torch.cuda.empty_cache()
         return loss
 
     @torch.no_grad()
@@ -1041,11 +1043,13 @@ class LatentDiffusion(DDPM):
                 batch = batch["loader_video"]
         else:
             pass
-
+        # dupfactor 
+        self.dupfactor = batch['dupfactor']
         x, c = self.get_batch_input(
             batch, random_uncond=random_uncond, is_imgbatch=is_imgbatch
         )
         loss, loss_dict = self(x, c, is_imgbatch=is_imgbatch, **kwargs)
+        
         return loss, loss_dict
 
     def apply_model(self, x_noisy, t, cond, **kwargs):
@@ -1155,6 +1159,7 @@ class LatentDiffusion(DDPM):
             mainlogger.info(
                 f"batch:{batch_idx}|epoch:{self.current_epoch} [globalstep:{self.global_step}]: loss={loss}"
             )
+        torch.cuda.empty_cache()
         return loss
 
     def _get_denoise_row_from_list(self, samples, desc=""):
@@ -1541,22 +1546,6 @@ class LatentDiffusion(DDPM):
             raise NotImplementedError
         return lr_scheduler
 
-    def forward(self, x, c, **kwargs):
-        if "t" in kwargs:
-            t = kwargs.pop("t")
-        else:
-            t = torch.randint(
-                0, self.num_timesteps, (x.shape[0],), device=self.device
-            ).long()
-        self.log(
-            "train/timestep",int(t.max().cpu().detach().clone()),
-            prog_bar=False,
-            logger=True,
-            on_step=True,
-            on_epoch=False,
-        )
-        return self.p_losses(x, c, t, **kwargs)
-        
     def on_save_checkpoint(self, checkpoint):
         # Remove reference model from checkpoint
         # since it won't be changed
@@ -1569,156 +1558,6 @@ class LatentDiffusion(DDPM):
         for key in keys_to_remove:
             checkpoint["state_dict"].pop(key, None)
         return checkpoint
-from lvdm.models.turbo_utils.lora import save_lora_weight,extract_lora_ups_down
-from lvdm.models.turbo_utils.lora_handler import LoraHandler
-from lvdm.models.turbo_utils.lora import collapse_lora, monkeypatch_remove_lora
-from lvdm.models.turbo_utils.turbo_scheduler import T2VTurboScheduler
-from lvdm.models.turbo_utils.ode_solver import DDIMSolver
-class T2VTurboDPO(LatentDiffusion):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # 1. Create the noise scheduler and the desired noise schedule.
-        # print(kwargs)
-        self.noise_scheduler = T2VTurboScheduler(
-            linear_start=kwargs["linear_start"],
-            linear_end=kwargs["linear_end"],
-        )
-    
-        # DDPMScheduler calculates the alpha and sigma noise schedules (based on the alpha bars) for us
-        alpha_schedule = torch.sqrt(self.noise_scheduler.alphas_cumprod)
-        sigma_schedule = torch.sqrt(1 - self.noise_scheduler.alphas_cumprod)
-        use_scale = False 
-        scale_b = kwargs["scale_b"]
-        self.num_ddim_timesteps = 50 
-        ddim_eta = 0.0 
-        self.solver = DDIMSolver(
-            self.noise_scheduler.alphas_cumprod.numpy(),
-            ddim_timesteps=self.num_ddim_timesteps,
-            use_scale=use_scale,
-            scale_b=scale_b,
-            ddim_eta=ddim_eta,
-        )
-        # self.device="cuda"
-        # self.solver = self.solver.to(self.device)
-        # print("self solver device",self.solver.ddim_timesteps.device,self.device)
-        # self.loss_type = "dpo"
-        # with open("before_lora.txt",'w') as f:
-        #     for n,p in self.model.named_parameters():
-        #         f.write(f"{n} {p.shape}\n")
-        self._freeze_model()
-        use_unet_lora = True
-        # import pdb; pdb.set_trace()
-        lora_manager = LoraHandler(
-            version="cloneofsimo",
-            use_unet_lora=use_unet_lora,
-            save_for_webui=True,
-            unet_replace_modules=["UNetModel"],
-        )
-        pretrained_unet_path="/root/autodl-tmp/unet_lora.pt"
-        # import pdb; pdb.set_trace()
-        unet_lora_params, unet_negation = lora_manager.add_lora_to_model(
-            use_unet_lora,
-            self.model,
-            lora_manager.unet_replace_modules,
-            lora_path=pretrained_unet_path,
-            dropout=0.1,
-            r=64,
-        )
-        # update ref_model 
-        lora_manager = LoraHandler(
-            version="cloneofsimo",
-            use_unet_lora=use_unet_lora,
-            save_for_webui=True,
-            unet_replace_modules=["UNetModel"],
-        )
-        pretrained_unet_path="/root/autodl-tmp/unet_lora.pt"
-        # import pdb; pdb.set_trace()
-        unet_lora_params, unet_negation = lora_manager.add_lora_to_model(
-            use_unet_lora,
-            self.ref_model,
-            lora_manager.unet_replace_modules,
-            lora_path=pretrained_unet_path,
-            dropout=0.1,
-            r=64,
-        )
-        for name,param in self.ref_model.named_parameters():
-            param.requires_grad = False
-        # with open("after_lora_no_ckpt.txt",'w') as f:
-        #     for n,p in self.model.named_parameters():
-        #         f.write(f"{n} {p.shape}\n")
-        # for name,param in self.model.named_parameters():
-        #     if "lora" in name:
-        #         print(param.shape)
-        self.ref_model.eval()
-        # collapse_lora(self.model, lora_manager.unet_replace_modules)
-        # monkeypatch_remove_lora(self.model)
-        # with open("after_collapse.txt",'w') as f:
-        #     for n,p in self.model.named_parameters():
-        #         f.write(f"{n} {p.shape}\n")
-        import copy
-        # import gc
-        # self.ref_model = copy.deepcopy(self.model)
-        # collapse_lora(self.ref_model, lora_manager.unet_replace_modules)
-        # monkeypatch_remove_lora(self.ref_model)
-        # # 禁用 ref_model 的梯度计算
-        for param in self.ref_model.parameters():
-            param.requires_grad = False
-        # gc.collect()  # Python垃圾回收
-        # if torch.cuda.is_available():
-        #     torch.cuda.empty_cache()  # 释放GPU显存
-    def forward(self, x, c,*args ,**kwargs):
-        # b, c, h, w, device, img_size, = *x.shape, x.device, self.image_size
-        # assert h == img_size and w == img_size, f'height and width of image must be {img_size}'
-        # t = torch.randint(
-        #     0, self.num_timesteps, (x.shape[0],), device=self.device
-        # ).long()
-        index = torch.randint(
-            0, self.num_ddim_timesteps, (x.shape[0],), device=self.device
-        ).long()
-        self.solver = self.solver.to(self.device)
-        # print(index.device,self.solver.ddim_timesteps.device,self.solver.ddim_timesteps.dtype)
-        start_timesteps = self.solver.ddim_timesteps[index]
-        return self.p_losses(x,c,t=start_timesteps , *args, **kwargs)
-    def q_sample(self, x_start, t, noise=None):
-        # import pdb;pdb.set_trace()
-        # noise = torch.randn_like(x_start)
-        noisy_model_input = self.noise_scheduler.add_noise(
-            x_start, noise, t
-        )
-        return noisy_model_input
-        # noise = default(noise, lambda: torch.randn_like(x_start))
-        # if self.use_scale:
-        #     return (
-        #         extract_into_tensor(self.sqrt_alphas_cumprod, t, x_start.shape)
-        #         * x_start
-        #         * extract_into_tensor(self.scale_arr, t, x_start.shape)
-        #         + extract_into_tensor(
-        #             self.sqrt_one_minus_alphas_cumprod, t, x_start.shape
-        #         )
-        #         * noise
-        #     )
-        # else:
-        #     return (
-        #         extract_into_tensor(self.sqrt_alphas_cumprod, t, x_start.shape)
-        #         * x_start
-        #         + extract_into_tensor(
-        #             self.sqrt_one_minus_alphas_cumprod, t, x_start.shape
-        #         )
-        #         * noise
-        #     )
-    def on_save_checkpoint(self,checkpoint):
-        weights = []
-        for _up, _down in extract_lora_ups_down(
-            self.model,target_replace_module={"UNetModel"}
-        ):
-            weights.append(_up.weight.to("cpu").to(torch.float32))
-            weights.append(_down.weight.to("cpu").to(torch.float32))
-            # print(_up.weight.shape,_down.weight.shape)\
-        # import pdb;pdb.set_trace()
-        print("len of weights",len(weights))
-        checkpoint['state_dict']=weights
-        return checkpoint
-
 
 # # import rlhf utils 
 # from lvdm.models.rlhf_utils.batch_ddim import batch_ddim_sampling

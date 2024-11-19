@@ -174,10 +174,11 @@ def generate_videos_from_prompts(prompts_file, output_dir, unet_dir, base_model_
     prompts = load_prompts(prompts_file)
     N_VIDEOS_PER_PROMPT=1
     from tqdm import tqdm
-    for idx, prompt in tqdm(enumerate(prompts)):
+    for idx, prompt in tqdm(enumerate(prompts),total=len(prompts)):
         seed = randomize_seed_fn(seed, randomize_seed)
         torch.manual_seed(seed)
-        output_paths = [os.path.join(output_dir,f"{idx:06}-{sample_idx}.mp4") for sample_idx in range(N_VIDEOS_PER_PROMPT)]
+        # output_paths = [os.path.join(output_dir,f"{prompt}-{sample_idx}.mp4") for sample_idx in range(N_VIDEOS_PER_PROMPT)]
+        output_paths = [os.path.join(output_dir,f"{idx:04}-{sample_idx}.mp4") for sample_idx in range(N_VIDEOS_PER_PROMPT)]
         # if all output_paths exist, skip
         if all([os.path.exists(path) for path in output_paths]):
             continue
