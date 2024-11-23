@@ -3,13 +3,23 @@
 <table class="center">
   
   <tr>
-    <td style="text-align:center;" width="320">Ground Truth</td>
-    <td style="text-align:center;" width="320">Reconstruction</td>
+    <td style="text-align:center;" width="320">Before Alignment</td>
+    <td style="text-align:center;" width="320">After Alignment</td>
   </tr>
   <tr>
-    <td><a href=""><img src="./assets/vc-dpo/0105.gif" width="320"></a></td>
-    <td><a href="https://github.com/user-attachments/assets/4adf29f2-d413-49b1-bccc-48adfd64a4da"><img src="./assets/vc-dpo/0163.gif" width="320"></a></td>
+    <td><a href="./assets/vc-dpo/0105.gif"><img src="./assets/vc-dpo/0105.gif" width="320"></a></td>
+    <td><a href="./assets/vc-init/0105.gif"><img src="./assets/vc-dpo/0105.gif" width="320"></a></td>
   </tr>
+  
+  <tr>
+    <td style="text-align:center;" width="320">Before Alignment</td>
+    <td style="text-align:center;" width="320">After Alignment</td>
+  </tr>
+  <tr>
+    <td><a href="./assets/vc-dpo/0163.gif"><img src="./assets/vc-dpo/0163.gif" width="320"></a></td>
+    <td><a href="./assets/vc-init/0163.gif"><img src="./assets/vc-dpo/0163.gif" width="320"></a></td>
+  </tr>
+
 </table>
 
 # checkpoints
