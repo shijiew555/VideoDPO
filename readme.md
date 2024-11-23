@@ -8,7 +8,7 @@
   </tr>
   <tr>
     <td><a href="./assets/vc2-dpo/0105.gif"><img src="./assets/vc2-dpo/0105.gif" width="320"></a></td>
-    <td><a href="./assets/vc2-init/0105.gif"><img src="./assets/vc2-dpo/0105.gif" width="320"></a></td>
+    <td><a href="./assets/vc2-init/0105.gif"><img src="./assets/vc2-init/0105.gif" width="320"></a></td>
   </tr>
   
   <tr>
@@ -17,7 +17,7 @@
   </tr>
   <tr>
     <td><a href="./assets/vc2-dpo/0163.gif"><img src="./assets/vc2-dpo/0163.gif" width="320"></a></td>
-    <td><a href="./assets/vc2-init/0163.gif"><img src="./assets/vc2-dpo/0163.gif" width="320"></a></td>
+    <td><a href="./assets/vc2-init/0163.gif"><img src="./assets/vc2-init/0163.gif" width="320"></a></td>
   </tr>
 
 </table>
