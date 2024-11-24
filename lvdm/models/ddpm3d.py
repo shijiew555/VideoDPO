@@ -1546,7 +1546,6 @@ class LatentDiffusion(DDPM):
         for key in keys_to_remove:
             checkpoint["state_dict"].pop(key, None)
         return checkpoint
-
 from lvdm.models.turbo_utils.lora import save_lora_weight,extract_lora_ups_down
 from lvdm.models.turbo_utils.lora_handler import LoraHandler
 from lvdm.models.turbo_utils.lora import collapse_lora, monkeypatch_remove_lora
@@ -1698,7 +1697,6 @@ class T2VTurboDPO(LatentDiffusion):
         print("len of weights",len(weights))
         checkpoint['state_dict']=weights
         return checkpoint
-    
 # # import rlhf utils 
 # from lvdm.models.rlhf_utils.batch_ddim import batch_ddim_sampling
 # from lvdm.models.rlhf_utils.reward_fn import aesthetic_loss_fn

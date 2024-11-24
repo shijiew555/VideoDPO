@@ -1,10 +1,11 @@
 model:
   base_learning_rate: 6.0e-06 # 1.5e-04
   scale_lr: False
-  ref_model_checkpoint: /root/init_ckpt/vc2/ref_model.ckpt
-  pretrained_checkpoint: /root/init_ckpt/vc2/model.ckpt
+  ref_model_checkpoint: checkpoints/vc2/ref_model.ckpt # not used in turbo finetuning. 
+  pretrained_checkpoint: checkpoints/vc2/model.ckpt
   target: lvdm.models.ddpm3d.T2VTurboDPO
   params:
+    pretrained_unet_path: checkpoints/t2v-turbo/unet_lora.pt
     loss_type: dpo
     log_every_t: 200
     linear_start: 0.00085
@@ -98,13 +99,6 @@ data:
         resolution: [320, 512]
         video_length: 2
         subset_split: all
-    # validation:
-    #   target: data.macvid.MaCVid
-    #   params:
-    #     data_root: /home/liurt/liurt_data/haoyu/dataset/elon_musk_video/val_data.yaml
-    #     resolution: [320, 512]
-    #     video_length: 16
-    #     subset_split: all
 
 lightning:  
   trainer:

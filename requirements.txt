@@ -25,3 +25,4 @@ kornia
 fairscale
 peft==0.13.2
 tenosrboard
+diffusers
