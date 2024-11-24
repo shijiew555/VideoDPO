@@ -78,8 +78,6 @@ class DDPM(pl.LightningModule):
         logvar_init=0.0,
         beta_dpo=5000.0, # dpo config 
         dupbeta=1, # dpo config 
-        beta_dpo=5000.0, # dpo config 
-        dupbeta=1, # dpo config 
     ):
         super().__init__()
         assert parameterization in [
@@ -145,7 +143,6 @@ class DDPM(pl.LightningModule):
             for param in self.ref_model.diffusion_model.parameters():
                 param.requires_grad = False
             self.beta_dpo = beta_dpo
-            self.dupbeta = dupbeta
 
     def register_schedule(
         self,
@@ -398,7 +395,7 @@ class DDPM(pl.LightningModule):
             on_step=True,
             on_epoch=False,
         )
-        factor = (0.72 / self.dupfactor)**self.dupbeta # scale up factor 
+        factor = self.dupfactor
         loss = ( -1 * factor * F.logsigmoid(inside_term)).mean()
         self.log(
             "train/factor",float(factor.clone().mean().detach().cpu()),

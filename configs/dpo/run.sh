@@ -1,5 +1,5 @@
 export TOKENIZERS_PARALLELISM=false
-# export OMP_NUM_THREADS=4
+export OMP_NUM_THREADS=4
 current_time=$(date +%Y%m%d%H%M%S)
 
 EXPNAME="dpo-train"
