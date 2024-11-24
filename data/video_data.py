@@ -178,8 +178,8 @@ class TextVideoDPO(Dataset):
 
     def __getitem__(self, index):
         if self.dupbeta:
-            videowidx, videolidx, frame_caption,score = self.pairs[index]
-            dupfactor = (0.72 / dupfactor)**self.dupbeta # scale up factor 
+            videowidx, videolidx, frame_caption,prob_score = self.pairs[index]
+            dupfactor = (0.72 / prob_score )**self.dupbeta # scale up factor 
         else:
             videowidx, videolidx, frame_caption = self.pairs[index]
         videow = self.data[videowidx]["video"]

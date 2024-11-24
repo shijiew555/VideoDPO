@@ -93,9 +93,9 @@ data:
     num_workers: 16
     wrap: false
     train:
-      target: data.macvid.MaCVidDPO
+      target: data.video_data.TextVideoDPO
       params:
-        data_root: configs/data/vidpro/train_data.yaml
+        data_root: configs/vc2_turbo_dpo/vidpro/train_data.yaml
         resolution: [320, 512]
         video_length: 2
         subset_split: all
