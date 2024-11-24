@@ -146,6 +146,7 @@ class TextVideoDPO(Dataset):
         frame_stride=4,
         subset_split="all",
         clip_length=1.0,
+        dupbeta=1.0, # scale up factor
     ):
         self.data = TextVideo(
             data_root, resolution, video_length, frame_stride, subset_split, clip_length
@@ -157,6 +158,7 @@ class TextVideoDPO(Dataset):
         print("DATASET CONFIG:")
         print(self.config)
         label_key = "label"
+        self.dupbeta = dupbeta
         for meta_path in self.config["META"]:
             # 我意识到这个pairdata可以放到metadata.json里面 再加一个字典就行了
             pairdata_path = os.path.join(meta_path, "pair.json")
@@ -164,22 +166,22 @@ class TextVideoDPO(Dataset):
                 pairs = json.load(f)
                 for item in pairs:
                     # under the pair.json after 0601,label_key has no use
-                    self.pairs.append(
-                        [item["video1"], item["video2"], item["frame_caption"],item['score']]
-                    )
-                    # if item[label_key] == 0:
-                    #     # put video2 first
-                    #     self.pairs.append([item["video2"],item["video1"],item["frame_caption"]])
-                    # else:
-                    #     self.pairs.append([item["video1"],item["video2"],item["frame_caption"]])
-
+                    if dupbeta:
+                        item = [item["video1"], item["video2"], item["frame_caption"],item['score']]
+                    else:
+                        item = [item["video1"], item["video2"], item["frame_caption"]]
+                    self.pairs.append(item)
         print(f"DPO dataset has {self.__len__()} pairs")
 
     def __len__(self):
         return len(self.pairs)
 
     def __getitem__(self, index):
-        videowidx, videolidx, frame_caption,score = self.pairs[index]
+        if self.dupbeta:
+            videowidx, videolidx, frame_caption,score = self.pairs[index]
+            dupfactor = (0.72 / dupfactor)**self.dupbeta # scale up factor 
+        else:
+            videowidx, videolidx, frame_caption = self.pairs[index]
         videow = self.data[videowidx]["video"]
         videol = self.data[videolidx]["video"]
         # print(f"video idx {videowidx} {videolidx}")
@@ -190,6 +192,10 @@ class TextVideoDPO(Dataset):
             combined_frames = torch.cat([videow, videol], dim=0)
         if isinstance(frame_caption, list):
             frame_caption = frame_caption[0]
+
+        
         # print("in dataloader getitem",combined_frames.shape)
-        # exit()
-        return {"video": combined_frames, "caption": frame_caption,"dupfactor":score}
+        if self.score:
+            return {"video": combined_frames, "caption": frame_caption,"dupfactor":dupfactor}
+        else:
+            return {"video": combined_frames, "caption": frame_caption}
