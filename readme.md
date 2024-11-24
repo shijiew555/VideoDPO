@@ -23,7 +23,9 @@
 </table>
 
 
-# Install
+# Get Started 
+
+## prepare environments 
 ```shell
 conda create -n videodpo python=3.10 -y
 conda activate videodpo
@@ -39,7 +41,15 @@ mkdir -p checkpoints/vc2
 wget -P checkpoints/vc2 https://huggingface.co/VideoCrafter/VideoCrafter2/resolve/main/model.ckpt
 python utils/create_ref_model.py
 ```
-### Prepare Training Data 
+### T2V-Turbo(V1)
+
+T2V-Turbo is latent consistency model. We provide finetuning LCM based on VC2. Please download vc2 checkpoints first. And then run: 
+```shell
+mkdir -p checkpoints/t2v-turbo
+wget -O checkpoints/t2v-turbo/unet_lora.pt "https://huggingface.co/jiachenli-ucsb/T2V-Turbo-VC2/resolve/main/unet_lora.pt?download=true"
+```
+
+## Prepare Training Data 
 download vidpro-vc2-dataset.tar from the following link. 
 then ln -s the dataset to /data/vidpro-dpo-dataset.
 or u could also add dataset with same structure in configs/dpo/vidpro/train_data.yaml
@@ -47,19 +57,24 @@ or u could also add dataset with same structure in configs/dpo/vidpro/train_data
 > to reduce peak memory use in training stage, we recommend to disable validation by not providing val_data.yaml.
 
 
-## Finetune videocrafter
-
+## Finetune VideoCrafter2
 ```shell
 bash configs/dpo/run.sh
 ```
 
-# Inference 
+## Inference VideoCrafter2
 We support inference with different types of inputs and outputs.
 We support both json and text formats to read prompts. 
 
 ```shell
 bash script_sh/inference_t2v.sh
 ```
+## Finetune T2V-Turbo(V1)
+```shell
+bash configs/dpo/run.sh
+```
+
+## Inference T2V-Turbo(V1)
 
 # Helper Functions
 besides, we also provide some useful tools to improve your finetuning experiences. 
