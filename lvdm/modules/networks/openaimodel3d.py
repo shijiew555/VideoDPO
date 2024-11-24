@@ -369,6 +369,7 @@ class UNetModel(nn.Module):
         use_image_attention=False,
         temporal_transformer_depth=1,
         fps_cond=False,
+        time_cond_proj_dim=None,
     ):
         super(UNetModel, self).__init__()
         if num_heads == -1:
@@ -395,7 +396,8 @@ class UNetModel(nn.Module):
         self.addition_attention = addition_attention
         self.use_image_attention = use_image_attention
         self.fps_cond = fps_cond
-
+        self.time_cond_proj_dim = time_cond_proj_dim
+        
         self.time_embed = nn.Sequential(
             linear(model_channels, time_embed_dim),
             nn.SiLU(),
@@ -407,6 +409,13 @@ class UNetModel(nn.Module):
                 nn.SiLU(),
                 linear(time_embed_dim, time_embed_dim),
             )
+        
+        if time_cond_proj_dim is not None:
+            self.time_cond_proj = nn.Linear(
+                time_cond_proj_dim, model_channels, bias=False
+            )
+        else:
+            self.time_cond_proj = None
 
         self.input_blocks = nn.ModuleList(
             [
