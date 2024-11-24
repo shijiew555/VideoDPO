@@ -1038,9 +1038,6 @@ class LatentDiffusion(DDPM):
             batch, random_uncond=random_uncond, is_imgbatch=is_imgbatch
         )
         loss, loss_dict = self(x, c, is_imgbatch=is_imgbatch, **kwargs)
-
-        # loss *= dupfactor 
-        # print(dupfactor)
         return loss, loss_dict
 
     def apply_model(self, x_noisy, t, cond, **kwargs):
@@ -1150,7 +1147,6 @@ class LatentDiffusion(DDPM):
             mainlogger.info(
                 f"batch:{batch_idx}|epoch:{self.current_epoch} [globalstep:{self.global_step}]: loss={loss}"
             )
-
         torch.cuda.empty_cache()
         return loss
 
