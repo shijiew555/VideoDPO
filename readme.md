@@ -39,6 +39,13 @@ mkdir -p checkpoints/vc2
 wget -P checkpoints/vc2 https://huggingface.co/VideoCrafter/VideoCrafter2/resolve/main/model.ckpt
 python utils/create_ref_model.py
 ```
+### Prepare Training Data 
+download vidpro-vc2-dataset.tar from the following link. 
+then ln -s the dataset to /data/vidpro-dpo-dataset.
+or u could also add dataset with same structure in configs/dpo/vidpro/train_data.yaml
+
+> to reduce peak memory use in training stage, we recommend to disable validation by not providing val_data.yaml.
+
 
 ## Finetune videocrafter
 
