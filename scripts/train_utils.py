@@ -44,7 +44,7 @@ def init_workspace(name, logdir, model_config, lightning_config, rank=0):
         config_path = os.path.join(root_dir,src_path)
         save_path = os.path.join(cfgdir,"train_data.yaml")
         os.system(f"cp {src_path} {save_path}")
-        import pdb;pdb.set_trace()
+        # import pdb;pdb.set_trace()
         # print("test saving train data .yaml exiting");exit();
         # save_path = os.path.join(cfgdir,"valid_data.yaml")
     # exit()

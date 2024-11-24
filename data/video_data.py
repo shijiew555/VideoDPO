@@ -195,7 +195,7 @@ class TextVideoDPO(Dataset):
 
         
         # print("in dataloader getitem",combined_frames.shape)
-        if self.score:
+        if self.dupbeta:
             return {"video": combined_frames, "caption": frame_caption,"dupfactor":dupfactor}
         else:
-            return {"video": combined_frames, "caption": frame_caption}
+            return {"video": combined_frames, "caption": frame_caption,"dupfactor":1.0}
