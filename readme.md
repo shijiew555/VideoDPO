@@ -22,42 +22,46 @@
 
 </table>
 
-# checkpoints
-
-save checkpoints to `checkpoints/vc2/model.ckpt`
-use `python utils/create_ref_model.py` to create `ref_model.ckpt`
 
 # Install
-
-Already adjust requirements.txt to H800.
 ```shell
-conda create -n videocrafter-dpo python=3.8
+conda create -n videodpo python=3.10 -y
+conda activate videodpo
 pip install -r requirements.txt
 ```
-# Functions
+
+## prepare checkpoints
+### VideoCrafter2
+run following instruction to create initial checkpoints. 
+
+```shell
+mkdir -p checkpoints/vc2
+wget -P checkpoints/vc2 https://huggingface.co/VideoCrafter/VideoCrafter2/resolve/main/model.ckpt
+python utils/create_ref_model.py
+```
+
 ## Finetune videocrafter
-(1) direct run:
-```
-# apply 2 gpus for debug run
-srun -p project --gres=gpu:2 --pty $SHELL 
-conda activate videocrafter
-bash configs/train/000_videocrafter2ft/run.sh
-```
 
-(2) submit a job:
+```shell
+bash configs/dpo/run.sh
 ```
-sbatch configs/train/  000_videocrafter2ft/run_slurm.sh
-```
-
 
 # Inference 
 We support inference with different types of inputs and outputs.
 We support both json and text formats to read prompts. 
-We also support 
+
+```shell
+bash script_sh/inference_t2v.sh
+```
 
 # Helper Functions
 besides, we also provide some useful tools to improve your finetuning experiences. 
 We could automatically remove training logs without any checkpoints saved. 
 ```bash 
 python utils/clean_results.py -d ./results 
+```
+
+# Citation
+```
+To be updated... 
 ```

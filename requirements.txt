@@ -6,7 +6,7 @@ omegaconf==2.1.1
 opencv_python
 pandas==2.0.0
 Pillow==9.5.0
-# pytorch_lightning==1.8.3
+pytorch_lightning==1.9
 PyYAML==6.0
 setuptools==70.0.0
 fairscale
@@ -23,3 +23,5 @@ scikit-learn
 open_clip_torch==2.22.0
 kornia
 fairscale
+peft==0.13.2
+tenosrboard
