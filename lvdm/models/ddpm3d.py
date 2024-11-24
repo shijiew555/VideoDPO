@@ -397,8 +397,7 @@ class DDPM(pl.LightningModule):
         )
         factor = self.dupfactor
         loss = ( -1 * factor * F.logsigmoid(inside_term)).mean()
-        self.log(
-            "train/factor",float(factor.clone().mean().detach().cpu()),
+        self.log(      "train/factor",float(factor.clone().mean().detach().cpu()),
             prog_bar=False,logger=True,
             on_step=True,on_epoch=False,
         )
