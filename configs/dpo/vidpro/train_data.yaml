@@ -1,8 +1,8 @@
 META:
   ## autodl server path 
-  -  /root/total_score_25P
+  # -  /root/total_score_25P
   ## 5880 server path 
-  # - /home/liurt/liurt_data/haoyu/dataset/text2video2-10k/total_score_75P_vbscore
+  - /home/liurt/liurt_data/haoyu/dataset/text2video2-10k/total_score_75P_vbscore
   ## superPOD server path 
 #   - /home/haoyu/research/VideoCrafter/dataset
   # - /home/rliuay/haoyu/dataset/fake_dataset
@@ -24,11 +24,5 @@ META:
   # - /home/rliuay/haoyu/dataset/text2video2-10k/total_score_500
   # - /home/rliuay/haoyu/dataset/text2video2-10k/pair_policy/total_score_0P_pair01_vbscore
   # - /home/rliuay/haoyu/dataset/text2video2-10k/pair_policy/total_score_0P_pair02_vbscore
-    # 
-# not ready metadata
-  # - /scratch/suptest/video_data/macvid/video_dataset_11
-  #  - /scratch/suptest/video_data/macvid/video_dataset_12/
-  #  - /scratch/suptest/video_data/macvid/video_dataset_13/
-  #  - /scratch/suptest/video_data/macvid/video_dataset_14/
-
+  # 
  
