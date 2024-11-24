@@ -39,9 +39,12 @@ def init_workspace(name, logdir, model_config, lightning_config, rank=0):
         # save data.yaml to the work sapace
         src_path = model_config['data']['params']['train']['params']['data_root'] ## xx. configs/data/vidpro/train_data.yaml
         root_dir = "/home/rliuay/haoyu/research/DPO-videocrafter"
+        # get current workdir 
+        
         config_path = os.path.join(root_dir,src_path)
         save_path = os.path.join(cfgdir,"train_data.yaml")
-        os.system(f"cp {config_path} {save_path}");
+        os.system(f"cp {src_path} {save_path}")
+        import pdb;pdb.set_trace()
         # print("test saving train data .yaml exiting");exit();
         # save_path = os.path.join(cfgdir,"valid_data.yaml")
     # exit()
