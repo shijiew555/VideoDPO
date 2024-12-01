@@ -167,6 +167,8 @@ class TextVideoDPO(Dataset):
                 for item in pairs:
                     # under the pair.json after 0601,label_key has no use
                     if dupbeta:
+                        if 'score' not in item:
+                            item['score']=1
                         item = [item["video1"], item["video2"], item["frame_caption"],item['score']]
                     else:
                         item = [item["video1"], item["video2"], item["frame_caption"]]

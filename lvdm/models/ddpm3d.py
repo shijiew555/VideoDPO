@@ -1658,7 +1658,6 @@ class T2VTurboDPO(LatentDiffusion):
         self.solver = self.solver.to(self.device)
         # print(index.device,self.solver.ddim_timesteps.device,self.solver.ddim_timesteps.dtype)
         start_timesteps = self.solver.ddim_timesteps[index]
-        self.dupfactor = x['dupfactor']
         return self.p_losses(x,c,t=start_timesteps , *args, **kwargs)
     def q_sample(self, x_start, t, noise=None):
         # import pdb;pdb.set_trace()
