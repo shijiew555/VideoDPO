@@ -1,9 +1,9 @@
 #!/bin/bash
 
 convert_and_infer() {
-    local exp_root="/root/autodl-tmp/results/baselines/"
-    local exp_name="20241031034015_vc2_turbo_dpo"
-    local ckpt_dir="$exp_root$exp_name/checkpoints/trainstep_checkpoints"
+    local exp_root="results/exp_round/"
+    local exp_name="exp_name"
+    local ckpt_path="/path/to/checkpoint.ckpt"
     for ckpt_file in "$ckpt_dir"/*.ckpt; do
         # 确保文件存在
         if [ -f "$ckpt_file" ]; then

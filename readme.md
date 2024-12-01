@@ -59,7 +59,7 @@ or u could also add dataset with same structure in configs/dpo/vidpro/train_data
 
 ## Finetune VideoCrafter2
 ```shell
-bash configs/dpo/run.sh
+bash configs/vc_dpo/run.sh
 ```
 
 ## Inference VideoCrafter2
@@ -71,10 +71,13 @@ bash script_sh/inference_t2v.sh
 ```
 ## Finetune T2V-Turbo(V1)
 ```shell
-bash configs/dpo/run.sh
+bash configs/t2v_turbo_dpo/run.sh
 ```
 
 ## Inference T2V-Turbo(V1)
+```shell
+bash configs/t2v_turbo_dpo/turbo_visualize.sh
+```
 
 # Helper Functions
 besides, we also provide some useful tools to improve your finetuning experiences. 
