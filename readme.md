@@ -1,4 +1,8 @@
 
+# VideoDPO: Omni-Preference Alignment for Video Diffusion Generation
+
+This is the official implementation for [VideoDPO](https://arxiv.org/pdf/2412.14167)
+
 # Gallery
 <table class="center">
   
