@@ -7,10 +7,12 @@
 <img src='https://img.shields.io/badge/Project-Website-orange' alt='Project Page'></a>
 
 
-[Runtao Liu$^{1*}$](https://github.com/rt219), [Haoyu Wu$^{1,2*}$](https://scholar.google.com/citations?user=kiQv84oAAAAJ&hl=zh-CN), Ziqiang Zheng$^1$, Chen Wei$^3$, [Yingqing He$^1$](https://scholar.google.com/citations?user=UDiGYN8AAAAJ&hl=en), Renjie Pi$^1$, [Qifeng Chen$^1$](https://cqf.io/)
+[Runtao Liu ](https://github.com/rt219), [Haoyu Wu ](https://scholar.google.com/citations?user=kiQv84oAAAAJ&hl=zh-CN)$^{1,2 *}$ , Ziqiang Zheng $^1$, Chen Wei $^3$, [Yingqing He](https://scholar.google.com/citations?user=UDiGYN8AAAAJ&hl=en)$^1$, Renjie Pi $^1$, [Qifeng Chen](https://cqf.io/)$^1$
 
-$^1$ HKUST $^2$ Renmin University of China $^3$Johns Hopkins University
+$^1$ HKUST $^2$ Renmin University of China $^3$ Johns Hopkins University
+
 ($^*$ Equal Contribution. Work completed during Haoyu's internship at HKUST.)
+
 
 </div>
 
@@ -109,7 +111,7 @@ python utils/clean_results.py -d ./results
 }
 ```
 
-# 🙏 Acknowledgement
+# Acknowledgement
 Our work is developed on the following open-source projects,we would like to express our sincere thanks to their contributions:
 [VideoCrafter2](https://github.com/AILab-CVC/VideoCrafter),[T2V-turbo](https://t2v-turbo.github.io/),[CogvideoX](https://github.com/THUDM/CogVideo),[VideoTuna](https://github.com/VideoVerses/VideoTuna),[Vbench](https://github.com/Vchitect/VBench), [VidProM](https://vidprom.github.io/).
 
