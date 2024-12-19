@@ -1,30 +1,36 @@
+<div align="center">
 
-# VideoDPO: Omni-Preference Alignment for Video Diffusion Generation
+<h1>VideoDPO: Omni-Preference Alignment for Video Diffusion Generation</h1>
+<a href="https://arxiv.org/abs/2412.14167">
+<img src='https://img.shields.io/badge/arxiv-videodpo-blue' alt='Paper PDF'></a>
+<a href="https://videodpo.github.io/">
+<img src='https://img.shields.io/badge/Project-Website-orange' alt='Project Page'></a>
 
-This is the official implementation for [VideoDPO](https://arxiv.org/pdf/2412.14167)
 
-# Gallery
-<table class="center">
-  
-  <tr>
-    <td style="text-align:center;" width="320">Before Alignment</td>
-    <td style="text-align:center;" width="320">After Alignment</td>
-  </tr>
-  <tr>
-    <td><a href="./assets/vc2-init/0105.gif"><img src="./assets/vc2-init/0105.gif" width="320"></a></td>
-    <td><a href="./assets/vc2-dpo/0105.gif"><img src="./assets/vc2-dpo/0105.gif" width="320"></a></td>
-  </tr>
-  
-  <tr>
-    <td style="text-align:center;" width="320">Before Alignment</td>
-    <td style="text-align:center;" width="320">After Alignment</td>
-  </tr>
-  <tr>
-    <td><a href="./assets/vc2-init/0163.gif"><img src="./assets/vc2-init/0163.gif" width="320"></a></td>
-    <td><a href="./assets/vc2-dpo/0163.gif"><img src="./assets/vc2-dpo/0163.gif" width="320"></a></td>
-  </tr>
+[Runtao Liu$^{1*}$](https://github.com/rt219), [Haoyu Wu$^{1,2*}$](https://scholar.google.com/citations?user=kiQv84oAAAAJ&hl=zh-CN), Ziqiang Zheng$^1$, Chen Wei$^3$, [Yingqing He$^1$](https://scholar.google.com/citations?user=UDiGYN8AAAAJ&hl=en), Renjie Pi$^1$, [Qifeng Chen$^1$](https://cqf.io/)
 
-</table>
+$^1$ HKUST $^2$ Renmin University of China $^3$Johns Hopkins University
+($^*$ Equal Contribution. Work completed during Haoyu's internship at HKUST.)
+
+</div>
+
+
+# Abstract 
+<p>
+Recent progress in generative diffusion models has greatly advanced text-to-video generation. While text-to-video models trained on large-scale, diverse datasets can produce varied outputs, these generations often deviate from user preferences, highlighting the need for preference alignment on pre-trained models. Although Direct Preference Optimization (DPO) has demonstrated significant improvements in language and image generation, we pioneer its adaptation to video diffusion models and propose a VideoDPO pipeline by making several key adjustments. Unlike previous image alignment methods that focus solely on either (i) visual quality or (ii) semantic alignment between text and videos, we comprehensively consider both dimensions and construct a preference score accordingly, which we term the OmniScore. We design a pipeline to automatically collect preference pair data based on the proposed OmniScore and discover that re-weighting these pairs based on the score significantly impacts overall preference alignment. Our experiments demonstrate substantial improvements in both visual quality and semantic alignment, ensuring that no preference aspect is neglected.
+</p>
+
+![alt text](assets/pipeline.png)
+
+
+# News
+- [2024/12/19] 🔥 We release the paper and the project. 
+
+# TODO 
+- [ ] Merge to VideoTuna
+- [ ] Release videocrafter2, t2v-turbo training dataset
+- [ ] Release code for cogvideox
+- [x] Release code for videocrafter2 and t2v-turbo 
 
 
 # Get Started 
@@ -83,7 +89,7 @@ bash configs/t2v_turbo_dpo/run.sh
 bash configs/t2v_turbo_dpo/turbo_visualize.sh
 ```
 
-# Helper Functions
+## Helper Functions
 besides, we also provide some useful tools to improve your finetuning experiences. 
 We could automatically remove training logs without any checkpoints saved. 
 ```bash 
@@ -92,5 +98,44 @@ python utils/clean_results.py -d ./results
 
 # Citation
 ```
-To be updated... 
+@misc{liu2024videodpoomnipreferencealignmentvideo,
+      title={VideoDPO: Omni-Preference Alignment for Video Diffusion Generation}, 
+      author={Runtao Liu and Haoyu Wu and Zheng Ziqiang and Chen Wei and Yingqing He and Renjie Pi and Qifeng Chen},
+      year={2024},
+      eprint={2412.14167},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2412.14167}, 
+}
 ```
+
+# 🙏 Acknowledgement
+Our work is developed on the following open-source projects,we would like to express our sincere thanks to their contributions:
+[VideoCrafter2](https://github.com/AILab-CVC/VideoCrafter),[T2V-turbo](https://t2v-turbo.github.io/),[CogvideoX](https://github.com/THUDM/CogVideo),[VideoTuna](https://github.com/VideoVerses/VideoTuna),[Vbench](https://github.com/Vchitect/VBench), [VidProM](https://vidprom.github.io/).
+
+Thank I Chieh Chen for valuable suggesstions on demos.
+
+
+# Gallery
+<table class="center">
+  
+  <tr>
+    <td style="text-align:center;" width="320">Before Alignment</td>
+    <td style="text-align:center;" width="320">After Alignment</td>
+  </tr>
+  <tr>
+    <td><a href="./assets/vc2-init/0105.gif"><img src="./assets/vc2-init/0105.gif" width="320"></a></td>
+    <td><a href="./assets/vc2-dpo/0105.gif"><img src="./assets/vc2-dpo/0105.gif" width="320"></a></td>
+  </tr>
+  
+  <tr>
+    <td style="text-align:center;" width="320">Before Alignment</td>
+    <td style="text-align:center;" width="320">After Alignment</td>
+  </tr>
+  <tr>
+    <td><a href="./assets/vc2-init/0163.gif"><img src="./assets/vc2-init/0163.gif" width="320"></a></td>
+    <td><a href="./assets/vc2-dpo/0163.gif"><img src="./assets/vc2-dpo/0163.gif" width="320"></a></td>
+  </tr>
+
+</table>
+
