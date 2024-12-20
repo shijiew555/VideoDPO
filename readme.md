@@ -125,15 +125,32 @@ Thank I Chieh Chen for valuable suggesstions on demos.
     <td style="text-align:center;" width="320">Before Alignment</td>
     <td style="text-align:center;" width="320">After Alignment</td>
   </tr>
+  <!-- snake -->
+  <tr>
+    <td><a href="./assets/vc2-init/0001.gif"><img src="./assets/vc2-init/0001.gif" width="320"></a></td>
+    <td><a href="./assets/vc2-dpo/0001.gif"><img src="./assets/vc2-dpo/0001.gif" width="320"></a></td>
+  </tr>
+  <!-- sword man -->
+  <tr>
+    <td><a href="./assets/vc2-init/0131.gif"><img src="./assets/vc2-init/0131.gif" width="320"></a></td>
+    <td><a href="./assets/vc2-dpo/0131.gif"><img src="./assets/vc2-dpo/0131.gif" width="320"></a></td>
+  </tr>
+  <!-- cyper trunk -->
+  <tr>
+    <td><a href="./assets/vc2-init/0197.gif"><img src="./assets/vc2-init/0197.gif" width="320"></a></td>
+    <td><a href="./assets/vc2-dpo/0197.gif"><img src="./assets/vc2-dpo/0197.gif" width="320"></a></td>
+  </tr>
+  <!-- spaceman -->
   <tr>
     <td><a href="./assets/vc2-init/0105.gif"><img src="./assets/vc2-init/0105.gif" width="320"></a></td>
     <td><a href="./assets/vc2-dpo/0105.gif"><img src="./assets/vc2-dpo/0105.gif" width="320"></a></td>
   </tr>
-  
+  <!-- dog -->
   <tr>
-    <td style="text-align:center;" width="320">Before Alignment</td>
-    <td style="text-align:center;" width="320">After Alignment</td>
+    <td><a href="./assets/vc2-init/0238.gif"><img src="./assets/vc2-init/0238.gif" width="320"></a></td>
+    <td><a href="./assets/vc2-dpo/0238.gif"><img src="./assets/vc2-dpo/0238.gif" width="320"></a></td>
   </tr>
+  <!-- wolf -->
   <tr>
     <td><a href="./assets/vc2-init/0163.gif"><img src="./assets/vc2-init/0163.gif" width="320"></a></td>
     <td><a href="./assets/vc2-dpo/0163.gif"><img src="./assets/vc2-dpo/0163.gif" width="320"></a></td>
