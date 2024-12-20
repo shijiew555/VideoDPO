@@ -2,27 +2,40 @@
 
 <h1>VideoDPO: Omni-Preference Alignment for Video Diffusion Generation</h1>
 <a href="https://arxiv.org/abs/2412.14167">
-<img src='https://img.shields.io/badge/arxiv-videodpo-blue' alt='Paper PDF'></a>
+<img src='https://img.shields.io/badge/arxiv-videodpo-darkred' alt='Paper PDF'></a>
 <a href="https://videodpo.github.io/">
 <img src='https://img.shields.io/badge/Project-Website-orange' alt='Project Page'></a>
 
 
-[Runtao Liu ](https://github.com/rt219), [Haoyu Wu ](https://scholar.google.com/citations?user=kiQv84oAAAAJ&hl=zh-CN)$^{1,2 *}$ , Ziqiang Zheng $^1$, Chen Wei $^3$, [Yingqing He](https://scholar.google.com/citations?user=UDiGYN8AAAAJ&hl=en)$^1$, Renjie Pi $^1$, [Qifeng Chen](https://cqf.io/)$^1$
+[Runtao Liu ](https://github.com/rt219)$^{1 *}$, [Haoyu Wu ](https://scholar.google.com/citations?user=kiQv84oAAAAJ&hl=zh-CN)$^{1,2 *}$ , Ziqiang Zheng $^1$, Chen Wei $^3$, [Yingqing He](https://scholar.google.com/citations?user=UDiGYN8AAAAJ&hl=en)$^1$, Renjie Pi $^1$, [Qifeng Chen](https://cqf.io/)$^1$
 
 $^1$ HKUST $^2$ Renmin University of China $^3$ Johns Hopkins University
 
 ($^*$ Equal Contribution. Work completed during Haoyu's internship at HKUST.)
 
-
 </div>
 
+<img width="1584" alt="image" src="https://github.com/user-attachments/assets/67d25e12-5b72-431d-9696-e4467a4f933a" />
 
-# Abstract 
+
 <p>
 Recent progress in generative diffusion models has greatly advanced text-to-video generation. While text-to-video models trained on large-scale, diverse datasets can produce varied outputs, these generations often deviate from user preferences, highlighting the need for preference alignment on pre-trained models. Although Direct Preference Optimization (DPO) has demonstrated significant improvements in language and image generation, we pioneer its adaptation to video diffusion models and propose a VideoDPO pipeline by making several key adjustments. Unlike previous image alignment methods that focus solely on either (i) visual quality or (ii) semantic alignment between text and videos, we comprehensively consider both dimensions and construct a preference score accordingly, which we term the OmniScore. We design a pipeline to automatically collect preference pair data based on the proposed OmniScore and discover that re-weighting these pairs based on the score significantly impacts overall preference alignment. Our experiments demonstrate substantial improvements in both visual quality and semantic alignment, ensuring that no preference aspect is neglected.
 </p>
 
-![alt text](assets/pipeline.png)
+```
+@misc{liu2024videodpoomnipreferencealignmentvideo,
+      title={VideoDPO: Omni-Preference Alignment for Video Diffusion Generation}, 
+      author={Runtao Liu and Haoyu Wu and Zheng Ziqiang and Chen Wei and Yingqing He and Renjie Pi and Qifeng Chen},
+      year={2024},
+      eprint={2412.14167},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2412.14167}, 
+}
+```
+
+
+
 
 
 # News
@@ -98,18 +111,6 @@ We could automatically remove training logs without any checkpoints saved.
 python utils/clean_results.py -d ./results 
 ```
 
-# Citation
-```
-@misc{liu2024videodpoomnipreferencealignmentvideo,
-      title={VideoDPO: Omni-Preference Alignment for Video Diffusion Generation}, 
-      author={Runtao Liu and Haoyu Wu and Zheng Ziqiang and Chen Wei and Yingqing He and Renjie Pi and Qifeng Chen},
-      year={2024},
-      eprint={2412.14167},
-      archivePrefix={arXiv},
-      primaryClass={cs.CV},
-      url={https://arxiv.org/abs/2412.14167}, 
-}
-```
 
 # Acknowledgement
 Our work is developed on the following open-source projects,we would like to express our sincere thanks to their contributions:
