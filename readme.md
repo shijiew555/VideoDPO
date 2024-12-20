@@ -7,7 +7,7 @@
 <img src='https://img.shields.io/badge/Project-Website-orange' alt='Project Page'></a>
 
 
-[Runtao Liu ](https://github.com/rt219)$^{1 *}$, [Haoyu Wu ](https://scholar.google.com/citations?user=kiQv84oAAAAJ&hl=zh-CN)$^{1,2 *}$ , Ziqiang Zheng $^1$, Chen Wei $^3$, [Yingqing He](https://scholar.google.com/citations?user=UDiGYN8AAAAJ&hl=en)$^1$, Renjie Pi $^1$, [Qifeng Chen](https://cqf.io/)$^1$
+[Runtao Liu ](https://github.com/rt219)$^{1 *}$, [Haoyu Wu ](https://cintellifusion.github.io/)$^{1,2 *}$ , Ziqiang Zheng $^1$, Chen Wei $^3$, [Yingqing He](https://scholar.google.com/citations?user=UDiGYN8AAAAJ&hl=en)$^1$, Renjie Pi $^1$, [Qifeng Chen](https://cqf.io/)$^1$
 
 $^1$ HKUST $^2$ Renmin University of China $^3$ Johns Hopkins University
 
