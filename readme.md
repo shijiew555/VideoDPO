@@ -112,21 +112,26 @@ python utils/clean_results.py -d ./results
 ![image](https://github.com/user-attachments/assets/ccddbd49-fbb4-4b05-a7e6-0c9bff41eb31)
 **Analysis of OmniScore on videos from VC2.** (a) The difference between the maximum and minimum OmniScore among N videos as N increases. (b) Histogram of OmniScore. (c) Histogram of the difference in OmniScore between two samples in a preference pair. (d) Correlation heatmap of the OmniScore across dimensions.
 
+<br>
+
 <p align="center">
 <img width="600" alt="image" src="https://github.com/user-attachments/assets/0418290b-c70d-499c-8235-5f261ceade41" />
 </p>
 
-
-
 **VideoDPO alignment performance.** We apply our proposed VideoDPO on three state-of-the-art open-source models and evaluate performance on VBench, HPS (V), and PickScore. After training with VideoDPO, all models achieve the best performance on VBench, with improvements also observed on HPS (V) or PickScore, demonstrating the effectiveness of our approach.
+
+<br>
 
 ![image](https://github.com/user-attachments/assets/b9974ac7-fd43-468d-8438-d1039f22e5a5)
 
 Comparison of sub-dimension scores before and after alignment on VBench for VC2, T2V-Turbo, and CogVideo.
 
+<br>
+
 ![image](https://github.com/user-attachments/assets/93e7cd8b-cc66-4a18-a847-6ac7ead06e9f)
 
 **Ablation studies.** We study different strategies and configurations, including (a) the pair strategy, (b) the filter strategy, (c) α values, the tuning hyper-parameter for re-weighting, and (d) N values, the number of video samples for each text prompt. Q is short for visual quality, and S is short for semantic alignment.
+
 
 # Acknowledgement
 Our work is developed on the following open-source projects,we would like to express our sincere thanks to their contributions:
