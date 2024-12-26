@@ -5,6 +5,9 @@
 <img src='https://img.shields.io/badge/arxiv-videodpo-darkred' alt='Paper PDF'></a>
 <a href="https://videodpo.github.io/">
 <img src='https://img.shields.io/badge/Project-Website-orange' alt='Project Page'></a>
+<a href="https://hkustconnect-my.sharepoint.com/:f:/g/personal/rliuay_connect_ust_hk/Em2rRAQarwhLkYsT9N__OoIBMkg1-V_myKsV-XkH9U3HoA?e=hjJfkA">
+<img src='https://img.shields.io/badge/Dataset-URL-green.svg' alt='Dataset Link'></a>
+
 
 
 [Runtao Liu ](https://github.com/rt219)$^{1 *}$, [Haoyu Wu ](https://cintellifusion.github.io/)$^{1,2 *}$ , Ziqiang Zheng $^1$, Chen Wei $^3$, [Yingqing He](https://scholar.google.com/citations?user=UDiGYN8AAAAJ&hl=en)$^1$, Renjie Pi $^1$, [Qifeng Chen](https://cqf.io/)$^1$
@@ -35,17 +38,23 @@ Recent progress in generative diffusion models has greatly advanced text-to-vide
 
 
 
-# News
-- [2024/12/19] 🔥 We release the paper and the project. 
+# 🚀News
+- [2024/12/27] 🔥🔥🔥 We release the **dataset**, vidpro-vc2-dataset. 
+- [2024/12/19] We release the paper and the project. 
 
-# TODO 
+# 📅TODO 
 - [ ] Merge to VideoTuna
-- [ ] Release videocrafter2, t2v-turbo training dataset
+- [ ] Release t2v-turbo training dataset
 - [ ] Release code for cogvideox
+- [x] 🔥🔥🔥 Release videocrafter2
 - [x] Release code for videocrafter2 and t2v-turbo 
 
 
-# Get Started 
+# 💪Get Started 
+
+## Dataset 
+
+The dataset vidpro-vc2-dataset has been released at [OneDrive](https://hkustconnect-my.sharepoint.com/:f:/g/personal/rliuay_connect_ust_hk/Em2rRAQarwhLkYsT9N__OoIBMkg1-V_myKsV-XkH9U3HoA?e=hjJfkA).
 
 ## prepare environments 
 ```shell
@@ -107,7 +116,7 @@ We could automatically remove training logs without any checkpoints saved.
 ```bash 
 python utils/clean_results.py -d ./results 
 ```
-# Results
+# 🍎Results
 
 ![image](https://github.com/user-attachments/assets/ccddbd49-fbb4-4b05-a7e6-0c9bff41eb31)
 **Analysis of OmniScore on videos from VC2.** (a) The difference between the maximum and minimum OmniScore among N videos as N increases. (b) Histogram of OmniScore. (c) Histogram of the difference in OmniScore between two samples in a preference pair. (d) Correlation heatmap of the OmniScore across dimensions.
