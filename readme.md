@@ -46,7 +46,7 @@ Recent progress in generative diffusion models has greatly advanced text-to-vide
 - [ ] Merge to VideoTuna
 - [ ] Release t2v-turbo training dataset
 - [ ] Release code for cogvideox
-- [x] 🔥🔥🔥 Release videocrafter2
+- [x] 🔥🔥🔥 Release the dataset for VideoCrafter2
 - [x] Release code for videocrafter2 and t2v-turbo 
 
 
