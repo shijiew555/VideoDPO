@@ -27,10 +27,10 @@ Recent progress in generative diffusion models has greatly advanced text-to-vide
 
 ```
 @article{liu2024videodpo,
-      title={VideoDPO: Omni-Preference Alignment for Video Diffusion Generation}, 
-      author={Liu, Runtao and Wu, Haoyu and Zheng, Ziqiang and Wei, Chen and He, Yingqing and Pi, Renjie and Chen, Qifeng},
-      journal={arXiv preprint arXiv:2412.14167},
-      year={2024}
+  title={VideoDPO: Omni-Preference Alignment for Video Diffusion Generation},
+  author={Liu, Runtao and Wu, Haoyu and Ziqiang, Zheng and Wei, Chen and He, Yingqing and Pi, Renjie and Chen, Qifeng},
+  journal={arXiv preprint arXiv:2412.14167},
+  year={2024}
 }
 ```
 
