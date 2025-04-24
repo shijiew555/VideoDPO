@@ -9,6 +9,8 @@
 <img src='https://img.shields.io/badge/Dataset-URL-green.svg' alt='Dataset Link'></a>
 
 
+🎉 ​​"Our paper has been accepted to CVPR 2025!"​​ 🎉
+
 
 [Runtao Liu ](https://github.com/rt219)$^{1 *}$, [Haoyu Wu ](https://cintellifusion.github.io/)$^{1,2 *}$ , Ziqiang Zheng $^1$, Chen Wei $^3$, [Yingqing He](https://scholar.google.com/citations?user=UDiGYN8AAAAJ&hl=en)$^1$, Renjie Pi $^1$, [Qifeng Chen](https://cqf.io/)$^1$
 
