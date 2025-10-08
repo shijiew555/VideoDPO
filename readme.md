@@ -92,7 +92,7 @@ or u could also add dataset with same structure in configs/dpo/vidpro/train_data
 
 ## Finetune VideoCrafter2
 ```shell
-bash configs/vc_dpo/run.sh
+bash configs/vc2_dpo/run.sh
 ```
 
 ## Inference VideoCrafter2

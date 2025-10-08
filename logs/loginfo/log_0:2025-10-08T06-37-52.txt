@@ -1,0 +1,12 @@
+2025-10-08 06:37:52,840-INFO: @lightning version: 2.5.5 [>=1.8 required]
+2025-10-08 06:37:52,840-INFO: ***** Configuring Model *****
+2025-10-08 06:37:53,372-INFO: LatentDiffusion: Running in eps-prediction mode
+2025-10-08 06:38:18,196-INFO: >>> Load weights from pretrained checkpoint checkpoints/vc2/model.ckpt
+2025-10-08 06:38:55,014-INFO: Running on 1=1x1 GPUs
+2025-10-08 06:38:55,015-INFO: ***** Configing Data *****
+2025-10-08 06:38:55,338-INFO: train, TextVideoDPO, 10000
+2025-10-08 06:38:55,338-INFO: ***** Configing Trainer *****
+2025-10-08 06:38:55,345-INFO: Monitoring val/loss_simple_ema as checkpoint metric.
+2025-10-08 06:38:55,345-INFO: Caution: Saving checkpoints every n train steps without deleting. This might require some free space.
+2025-10-08 06:38:55,382-INFO: ***** Running the Loop *****
+2025-10-08 06:38:55,382-INFO: <Training in DDPShare Mode>

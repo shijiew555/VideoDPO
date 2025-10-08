@@ -74,14 +74,9 @@ def get_parser(**parser_kwargs):
 
 
 def get_nondefault_trainer_args(args):
-    parser = argparse.ArgumentParser()
-    parser = Trainer.add_argparse_args(parser)
-    default_trainer_args = parser.parse_args([])
-    return sorted(
-        k
-        for k in vars(default_trainer_args)
-        if getattr(args, k) != getattr(default_trainer_args, k)
-    )
+    # Note: add_argparse_args was removed in newer PyTorch Lightning versions
+    # Return empty list since we handle trainer args through config files
+    return []
 
 
 if __name__ == "__main__":
@@ -98,7 +93,8 @@ if __name__ == "__main__":
     os.environ.pop("SLURM_NTASKS", None)
     parser = get_parser()
     ## Extends existing argparse by default Trainer attributes
-    parser = Trainer.add_argparse_args(parser)
+    # Note: add_argparse_args was removed in newer PyTorch Lightning versions
+    # We'll handle trainer args manually through config files
     args, unknown = parser.parse_known_args()
     ## disable transformer warning
     transf_logging.set_verbosity_error()
@@ -177,6 +173,11 @@ if __name__ == "__main__":
     logger.info("***** Configing Trainer *****")
     if "accelerator" not in trainer_config:
         trainer_config["accelerator"] = "gpu"
+    
+    # Ensure GPU is properly configured
+    if trainer_config.get("accelerator") == "gpu" and torch.cuda.is_available():
+        trainer_config["devices"] = 1  # Use 1 GPU
+        trainer_config["precision"] = "16"  # Use half precision for xformers compatibility
 
     ## setup trainer args: pl-logger and callbacks
     trainer_kwargs = dict()
@@ -217,12 +218,20 @@ if __name__ == "__main__":
     # trainer_kwargs["limit_val_batches"] = 0.01
     # trainer_kwargs["val_check_interval"] = 20  #float: epoch ratio | integer: batch num
 
-    trainer_args = argparse.Namespace(**trainer_config)
-    # print(trainer_args)
-    # print(trainer_kwargs)
-    # exit()
-
-    trainer = Trainer.from_argparse_args(trainer_args, **trainer_kwargs)
+    # Note: from_argparse_args was removed in newer PyTorch Lightning versions
+    # We'll create the trainer directly with the config parameters
+    # Filter out invalid arguments for Trainer constructor
+    valid_trainer_args = {
+        'benchmark', 'log_every_n_steps', 'num_nodes', 'devices', 
+        'accumulate_grad_batches', 'max_epochs', 'precision', 'strategy',
+        'logger', 'callbacks', 'sync_batchnorm', 'replace_sampler_ddp',
+        'accelerator'
+    }
+    
+    filtered_trainer_config = {k: v for k, v in trainer_config.items() if k in valid_trainer_args}
+    trainer_kwargs.update(filtered_trainer_config)
+    
+    trainer = Trainer(**trainer_kwargs)
 
     ## allow checkpointing via USR1
     def melk(*args, **kwargs):

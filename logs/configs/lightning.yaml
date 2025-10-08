@@ -1,0 +1,31 @@
+lightning:
+  callbacks:
+    image_logger:
+      target: utils.callbacks.ImageLogger
+      params:
+        to_local: true
+        save_dir: log_image
+        batch_frequency: 100000
+        max_images: 2
+        log_images_kwargs:
+          unconditional_guidance_scale: 12
+    metrics_over_trainsteps_checkpoint:
+      target: pytorch_lightning.callbacks.ModelCheckpoint
+      params:
+        filename: step-{step:04}
+        save_weights_only: true
+        every_n_epochs: null
+        every_n_train_steps: 499
+  trainer:
+    benchmark: true
+    log_every_n_steps: 1
+    num_workers: 10
+    num_nodes: 1
+    devices: 1
+    accumulate_grad_batches: 2
+    max_epochs: 10
+  modelcheckpoint:
+    target: pytorch_lightning.callbacks.ModelCheckpoint
+    params:
+      every_n_epochs: 1
+      filename: '{epoch:04}-{step:06}'
